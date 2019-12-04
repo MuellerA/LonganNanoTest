@@ -17,7 +17,7 @@ public:
 
   public:
     void on()  const { GPIO_BC (_gpio) = _pin ; } // GPIO port bit operation register
-    void off() const { GPIO_BOP(_gpio) = _pin ; } // GPIO port bit operation register
+    void off() const { GPIO_BOP(_gpio) = _pin ; } // GPIO bit clear register
 
   private:
     uint32_t _gpio ;
@@ -59,13 +59,16 @@ public:
     if (b) _b.on() ; else _b.off() ;
   }
 
-  void red()   { _r.on()  ; _g.off() ; _b.off() ; }
-  void green() { _r.off() ; _g.on()  ; _b.off() ; }
-  void blue()  { _r.off() ; _g.off() ; _b.on()  ; }
+  void red()     { _r.on()  ; _g.off() ; _b.off() ; }
+  void green()   { _r.off() ; _g.on()  ; _b.off() ; }
+  void blue()    { _r.off() ; _g.off() ; _b.on()  ; }
 
-  void white() { _r.on()  ; _g.on()  ; _b.on()  ; }
-  void black() { _r.off() ; _g.off() ; _b.off()  ; }
-  
+  void yellow()  { _r.on()  ; _g.on()  ; _b.off() ; }
+  void magenta() { _r.on()  ; _g.off() ; _b.on()  ; }
+  void cyan()    { _r.off() ; _g.on()  ; _b.on()  ; }
+
+  void white()   { _r.on()  ; _g.on()  ; _b.on()  ; }
+  void black()   { _r.off() ; _g.off() ; _b.off() ; }
   
 private:
   Led _r{GPIOC, GPIO_PIN_13} ;

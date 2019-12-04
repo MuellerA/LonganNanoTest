@@ -9,30 +9,30 @@ extern "C"
 
 #include "led.h"
 
+void delay()
+{
+  volatile uint32_t delay{8000000} ;
+  for (uint32_t i = 0 ; i < delay ; ++i) ;
+}
 
 int main()
 {
   RgbLed rgb ;
-  volatile uint32_t delay{7000000} ;
   
   rgb.setup() ;
   
   while (true)
   {
-    rgb.red() ;
-    for (uint32_t i = 0 ; i < delay ; ++i) ;
+    rgb.red    () ; delay() ;
+    rgb.green  () ; delay() ;
+    rgb.blue   () ; delay() ;
 
-    rgb.green() ;
-    for (uint32_t i = 0 ; i < delay ; ++i) ;
-
-    rgb.blue() ;
-    for (uint32_t i = 0 ; i < delay ; ++i) ;
-
-    rgb.white() ;
-    for (uint32_t i = 0 ; i < delay ; ++i) ;
-
-    rgb.black() ;
-    for (uint32_t i = 0 ; i < delay ; ++i) ;
+    rgb.yellow () ; delay() ;
+    rgb.cyan   () ; delay() ;
+    rgb.magenta() ; delay() ;
+    
+    rgb.white  () ; delay() ;
+    rgb.black  () ; delay() ;
   }
 }
 

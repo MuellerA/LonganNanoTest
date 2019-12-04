@@ -2,9 +2,9 @@
 
 <p>
 <table>
-<tr><th>Board</th><th>Flash</th><th>SRAM</th></tr>
-<tr><td>Longan Nano</td><td>128kB</td><td>32kB</td></tr>
-<tr><td>Longan Nano Lite</td><td>64kB</td><td>20kB</td></tr>
+<tr><th>Board</th><th>MCU</th><th>Flash</th><th>SRAM</th></tr>
+<tr><td>Longan Nano</td><td>GD32VF103CBT6</td><td>128kB</td><td>32kB</td></tr>
+<tr><td>Longan Nano Lite</td><td>GD32VF103C8T6</td><td>64kB</td><td>20kB</td></tr>
 </table>
 </p>
 
