@@ -8,27 +8,13 @@ extern "C"
 }
 #include <stdio.h>
 
-static const uint32_t Usart    = USART0 ;
-static const rcu_periph_enum UsartRcuGpio  = RCU_GPIOA ;
-static const rcu_periph_enum UsartRcuUsart = RCU_USART0 ;
-static const uint32_t UsartGpio = GPIOA ;
-static const uint32_t UsartTx   = GPIO_PIN_9 ;
-static const uint32_t UsartRx   = GPIO_PIN_10 ;
+#include "usart.h"
 
+Usart0 usart ;
 
 int _put_char(int ch) // used by printf
 {
-  while (usart_flag_get(Usart, USART_FLAG_TBE) == RESET) ;
-
-  usart_data_transmit(Usart, (uint8_t) ch );
-  return ch;
-}
-
-int getChar()
-{
-  if (usart_flag_get(Usart, USART_FLAG_RBNE) == RESET)
-    return -1 ;
-  return usart_data_receive(Usart) ;
+  return usart.putc(ch) ;
 }
 
 void delay()
@@ -39,32 +25,27 @@ void delay()
 
 int main()
 {
-  rcu_periph_clock_enable(UsartRcuGpio);  // enable GPIO clock
-  rcu_periph_clock_enable(UsartRcuUsart); // enable USART clock
+  usart.setup(115200UL) ;
 
-  gpio_init(UsartGpio, GPIO_MODE_AF_PP,       GPIO_OSPEED_50MHZ, UsartTx);
-  gpio_init(UsartGpio, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, UsartRx);
+  uint32_t *deviceSig = (uint32_t*)0x1FFFF7E0 ;
+  uint32_t memInfo = deviceSig[0] ;
 
-  // USART 115200,8N1, no-flow-control
-  usart_deinit(Usart);
-  usart_baudrate_set(Usart, 115200U);
-  usart_word_length_set(Usart, USART_WL_8BIT);
-  usart_stop_bit_set(Usart, USART_STB_1BIT);
-  usart_parity_config(Usart, USART_PM_NONE);
-  usart_hardware_flow_rts_config(Usart, USART_RTS_DISABLE);
-  usart_hardware_flow_cts_config(Usart, USART_CTS_DISABLE);
-  usart_receive_config(Usart, USART_RECEIVE_ENABLE);
-  usart_transmit_config(Usart, USART_TRANSMIT_ENABLE);
-  usart_enable(Usart);
+  printf("\nUSART TEST\n\n") ;
+  printf("Flash:     %3lukB\n", (memInfo >>  0) & 0xffff) ;
+  printf("SRAM:      %3lukB\n", (memInfo >> 16) & 0xffff) ;
 
-  uint32_t i = 0 ;
+  uint32_t *deviceId = (uint32_t*)0x1FFFF7E8 ;
+  
+  printf("Device ID: %08lX %08lX %08lX\n", deviceId[0], deviceId[1], deviceId[2]) ;
+  
   while (true)
   {
-    int ch = getChar() ;
-    if (ch < 0)
-      printf("Hallo Usart %ld!\n", i++);
-    else
-      printf("Echo %c\n", ch) ;
+    int ch = usart.getc() ;
+    if (ch >= 0)
+      usart.putc(ch) ;
+    if (ch == 13)
+      usart.putc(10) ;
+
     delay() ;
   }
 

@@ -16,6 +16,14 @@ inline uint32_t tick32(void)
   return *(volatile uint32_t *)(TIMER_CTRL_ADDR + TIMER_MTIME);
 }
 
+void delayMs(uint32_t ms = 1)
+{
+  uint64_t t0 = get_timer_value() ;
+  uint64_t d  = SystemCoreClock / 4 / 1000 * ms ; // sys tick is SytemCoreClock/4 Hz
+
+  while ((get_timer_value() - t0) < d) ;
+}
+
 void test_Manual(uint8_t mode)
 {
   uint32_t t1, t2 ;
@@ -60,6 +68,15 @@ void test_Manual(uint8_t mode)
       else
         GPIO_BOP(FreqGpio) = FreqPin ;
     }
+
+  case 5:
+    while (true)
+    {
+      GPIO_BOP(FreqGpio) = FreqPin ;
+      delayMs(10) ;
+      GPIO_BC (FreqGpio) = FreqPin ;
+      delayMs(990) ;
+    }
   }
 
 }
@@ -81,7 +98,8 @@ int main()
   // test_Manual(2) ; // 10.8MHz - overshoot
   // test_Manual(3) ; // 844kHz - overshoot
   test_Manual(4) ; // 106kHz - overshoot
-
+  // test_Manual(5) ; // 1Hz (10ms pulse)
+  
   // test_System(RCU_CKOUT0SRC_CKSYS)       ; // 104MHz - sine, too fast for analyzer
   // test_System(RCU_CKOUT0SRC_IRC8M)       ; // 8MHz - overshoot
   // test_System(RCU_CKOUT0SRC_HXTAL)       ; // 8MHz - asym, overshoot
