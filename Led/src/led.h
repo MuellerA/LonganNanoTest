@@ -16,9 +16,8 @@ public:
     }
 
   public:
-    void on()  const { GPIO_BC (_gpio) = _pin ; } // GPIO port bit operation register
-    void off() const { GPIO_BOP(_gpio) = _pin ; } // GPIO bit clear register
-
+    void on()  const { GPIO_BC (_gpio) = _pin ; } // GPIO bit clear register
+    void off() const { GPIO_BOP(_gpio) = _pin ; } // GPIO port bit operation register
   private:
     uint32_t _gpio ;
     uint32_t _pin ;

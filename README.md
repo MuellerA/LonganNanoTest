@@ -31,3 +31,16 @@ upload_protocol = dfu</pre>
  <li>start upload in PlatformIO</li>
 </ol>
 </p>
+
+<table>
+  <tr><th colspan="99">PINs</th></tr>
+  <tr><td>C13</td><td>Red LED</td></tr>
+  <tr><td>A1</td><td>Green LED</td></tr>
+  <tr><td>A2</td><td>Blue LED</td></tr>
+</table>
+
+<table>
+  <tr><th colspan="99">Tests</th></tr>
+  <tr><th>Led</th><td>Onboard RGB Led</td></tr>
+  <tr><th>Freq</th><td>Output wave signal on pin A8/CK_OUT0 (select wave form in main())</td></tr>
+</table>
