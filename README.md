@@ -44,15 +44,25 @@ upload_protocol = dfu</pre>
 </p>
 
 <table>
-  <tr><th colspan="99">PINs</th></tr>
-  <tr><td>C13</td><td>Red LED</td></tr>
-  <tr><td>A1</td><td>Green LED</td></tr>
-  <tr><td>A2</td><td>Blue LED</td></tr>
+  <tr><th colspan="99">OnBoard Connected PINs</th></tr>
+  <tr><td>A1</td><td>Green LED active low</td></tr>
+  <tr><td>A2</td><td>Blue LED active low</td></tr>
   <tr><td>A5/SCK0</td><td>LCD SPI Clk</td></tr>
   <tr><td>A7/MOSI0</td><td>LCD SPI MOSI</td></tr>
+  <tr><td>A11/USBFS_DM</td><td>USB D-</td></tr>
+  <tr><td>A12/USBFS_DP</td><td>USB D+</td></tr>
   <tr><td>B0</td><td>LCD RS</td></tr>
   <tr><td>B1</td><td>LCD RST</td></tr>
-  <tr><td>B2</td><td>LCD CS</td></tr>
+  <tr><td>[B2]</td><td>LCD CS</td></tr>
+  <tr><td>B12/NSS1</td><td>TF CARD SPI CS</td></tr>
+  <tr><td>B13/SCK1</td><td>TF CARD SPI Clk</td></tr>
+  <tr><td>B14/MISO1</td><td>TF CARD SPI MISO, 10k PullUp</td></tr>
+  <tr><td>B15/MOSI</td><td>TF CARD SPI MOSI, 10k PullUp</td></tr>
+  <tr><td>C13</td><td>Red LED active low</td></tr>
+  <tr><td>C14/OSC32IN</td><td>32kHz Clk</td></tr>
+  <tr><td>C15/OSC32OUT</td><td>32kHz Clk</td></tr>
+  <tr><td>[D0/OSCIN]</td><td>8MHz Clk</td></tr>
+  <tr><td>[D1/OSCOUT]</td><td>8MHz Clk</td></tr>
 </table>
 
 <table>
