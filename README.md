@@ -71,4 +71,5 @@ upload_protocol = dfu</pre>
   <tr><th>Led</th><td>Onboard RGB Led</td></tr>
   <tr><th>Freq</th><td>Output wave signal on pin A8/CK_OUT0 (select wave form in main())</td></tr>
   <tr><th>Usart</th><td>USART0 (115200,8N1), Pins TX0, RX0</td></tr>
+  <tr><th>Lcd</th><td>LCD 160x80</td></tr>
 </table>
