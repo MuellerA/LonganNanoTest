@@ -44,25 +44,26 @@ upload_protocol = dfu</pre>
 </p>
 
 <table>
-  <tr><th colspan="99">OnBoard Connected PINs</th></tr>
-  <tr><td>A1</td><td>Green LED active low</td></tr>
-  <tr><td>A2</td><td>Blue LED active low</td></tr>
-  <tr><td>A5/SCK0</td><td>LCD SPI Clk</td></tr>
-  <tr><td>A7/MOSI0</td><td>LCD SPI MOSI</td></tr>
-  <tr><td>A11/USBFS_DM</td><td>USB D-</td></tr>
-  <tr><td>A12/USBFS_DP</td><td>USB D+</td></tr>
-  <tr><td>B0</td><td>LCD RS</td></tr>
-  <tr><td>B1</td><td>LCD RST</td></tr>
-  <tr><td>[B2]</td><td>LCD CS</td></tr>
-  <tr><td>B12/NSS1</td><td>TF CARD SPI CS</td></tr>
-  <tr><td>B13/SCK1</td><td>TF CARD SPI Clk</td></tr>
-  <tr><td>B14/MISO1</td><td>TF CARD SPI MISO, 10k PullUp</td></tr>
-  <tr><td>B15/MOSI</td><td>TF CARD SPI MOSI, 10k PullUp</td></tr>
-  <tr><td>C13</td><td>Red LED active low</td></tr>
-  <tr><td>C14/OSC32IN</td><td>32kHz Clk</td></tr>
-  <tr><td>C15/OSC32OUT</td><td>32kHz Clk</td></tr>
-  <tr><td>[D0/OSCIN]</td><td>8MHz Clk</td></tr>
-  <tr><td>[D1/OSCOUT]</td><td>8MHz Clk</td></tr>
+  <tr><th colspan="99">PIN Connections</th></tr>
+  <tr><th colspan="3">A</th><th colspan="3">B</th><th colspan="3">C</th><th colspan="3">D</th>
+  <tr><th>Pin</th><th>5VT</th><th>OnBoard Function</th><th>Pin</th><th>5VT</th><th>OnBoard Function</th><th>Pin</th><th>5VT</th><th>OnBoard Function</th><th>Pin</th><th>5VT</th><th>OnBoard Function</th></tr>
+  <tr><td>A0</td><td>-</td><td></td>                    <td>B0</td><td>-</td><td>LCD RS</td>                             <td></td><td></td><td></td>  <td>[D0/OSCIN]</td><td>-</td><td>8MHz Clk</td></tr>
+  <tr><td>A1</td><td>-</td><td>Green LED active low</td><td>B1</td><td>-</td><td>LCD RST</td>                            <td></td><td></td><td></td>  <td>[D1/OSCOUT]</td><td>-</td><td>8MHz Clk</td></tr>
+  <tr><td>A2</td><td>-</td><td>Blue LED active low</td> <td>[B2]</td><td>*</td><td>LCD CS</td></tr>
+  <tr><td>A3</td><td>-</td><td></td>                    <td>B3</td><td>*</td><td></td></tr>
+  <tr><td>A4</td><td>-</td><td></td>                    <td>B4</td><td>*</td><td></td></tr>
+  <tr><td>A5/SCK0</td><td>-</td><td>LCD SPI Clk</td>    <td>B5</td><td>-</td><td></td></tr>
+  <tr><td>A6</td><td>-</td><td></td>                    <td>B6</td><td>*</td><td></td></tr>
+  <tr><td>A7/MOSI0</td><td>-</td><td>LCD SPI MOSI</td>  <td>B7</td><td>*</td><td></td></tr>
+  <tr><td>A8</td><td>*</td><td></td>                    <td>B8</td><td>*</td><td></td></tr>
+  <tr><td>A9</td><td>*</td><td></td>                    <td>B9</td><td>*</td><td></td></tr>
+  <tr><td>A10</td><td>*</td><td></td>                   <td>B10</td><td>*</td><td></td></tr>
+  <tr><td>A11/USBFS_DM</td><td>*</td><td>USB D-</td>    <td>B11</td><td>*</td><td></td></tr>
+  <tr><td>A12/USBFS_DP</td><td>*</td><td>USB D+</td>    <td>B12/NSS1</td><td>*</td><td>TF CARD SPI CS</td>               <td>C13</td><td>-</td><td>Red LED active low</td></tr>
+  <tr><td>A13</td><td>*</td><td></td>                   <td>B13/SCK1</td><td>*</td><td>TF CARD SPI Clk</td>              <td>C14/OSC32IN</td><td>-</td><td>32kHz Clk</td></tr>
+  <tr><td>A14</td><td>*</td><td></td>                   <td>B14/MISO1</td><td>*</td><td>TF CARD SPI MISO, 10k PullUp</td><td>C15/OSC32OUT</td><td>-</td><td>32kHz Clk</td></tr>
+  <tr><td>A15</td><td>*</td><td></td>                   <td>B15/MOSI1</td><td>*</td><td>TF CARD SPI MOSI, 10k PullUp</td></tr>
+  <tr><td colspan="99">[x] no available as header pin; 5VT (5 Volt Tolerant Input): * yes, - no</td></tr>
 </table>
 
 <table>
