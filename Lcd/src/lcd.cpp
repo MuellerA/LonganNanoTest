@@ -10,7 +10,6 @@ extern "C"
 #include "delay.h"
 #include "spi.h"
 #include "lcd.h"
-extern "C" const uint8_t font[1520] ;
 
 struct LcdCmdData
 {
@@ -19,10 +18,12 @@ struct LcdCmdData
   uint8_t _data[16] ; // max size
 } ;
 
-Lcd::Lcd(Spi &spi)
+Lcd::Lcd(Spi &spi, const uint8_t *font, uint8_t fontHeight, uint8_t fontWidth)
   // LCD: B0 RS, B1 RST, B2 CS
   : _spi{spi}, _rcuGpio{RCU_GPIOB}, _gpio{GPIOB}, _pinRst{GPIO_PIN_1}, _pinRs{GPIO_PIN_0}, _pinCs{GPIO_PIN_2},
-    _fg{0xffffff}, _bg{0x000000}
+    _txtAreaXmin{0}, _txtAreaXmax{159}, _txtAreaYmin{0}, _txtAreaYmax{79}, _txtPosX{0}, _txtPosY{0},
+    _font{font}, _fontHeight{fontHeight}, _fontWidth{fontWidth},
+    _txtFg{0xffffff}, _txtBg{0x000000}
 {
 }
 
@@ -71,7 +72,7 @@ void Lcd::setup()
   // Interface Pixel Format
   cmd({0x3A,  1, { 0x06 } }) ; // 18 bit/pixel
   // Memory Data Access Control
-  cmd({0x36,  1, { 0xb8 } }) ; // orientation 08, c8, 78, a8
+  cmd({0x36,  1, { 0xa8 } }) ; // orientation 08, c8, 78, a8
   // Display On
   cmd(0x29) ;
 }
@@ -100,54 +101,94 @@ void Lcd::fill(uint8_t x1, uint8_t x2, uint8_t y1, uint8_t y2, uint32_t rgb)
   csHi() ;
 }
 
-void Lcd::putChar(uint8_t x, uint8_t y, char ch)
+void Lcd::putChar(char ch)
 {
-  cmd({0x2a, 4, { 0x00,  1+x+0, 0x00,  1+x+ 7 } }) ; // x-offset  1
-  cmd({0x2b, 4, { 0x00, 26+y+0, 0x00, 26+y+15 } }) ; // y-offset 26
-
-  // Memory Write
-  cmd(0x2c) ;
-  
-  csLo() ;
-  rsHi() ;
-
-  if ((' ' <= ch) || (ch <= '~'))
-    ch -= ' ' ;
-  else
-    ch = 0 ;
-
-  const uint8_t *charFont = font + (uint8_t)ch * 16 ;
-  
-  for (uint8_t y = 0 ; y < 16 ; ++y)
+  if ((' ' <= ch) && (ch <= '~')) // 7bit ASCII
   {
-    for (uint8_t x = 0, c = charFont[y] ; x < 8 ; ++x, c >>= 1)
+    if ((_txtPosX + _fontWidth) > _txtAreaXmax+1)
     {
-      uint32_t rgb = (c & 0x01) ? _fg : _bg ;
-      _spi.putByte(rgb >> 16) ;
-      _spi.putByte(rgb >>  8) ;
-      _spi.putByte(rgb >>  0) ;
+      _txtPosX  = _txtAreaXmin ;
+      _txtPosY += _fontHeight ;
     }
-  }  
-  while (_spi.isTransmit()) ;
-  csHi() ;
-}
+    if ((_txtPosY + _fontHeight) > _txtAreaYmax+1)
+    {
+      _txtPosY  = _txtAreaYmin ;
+    }
 
-void Lcd::putStr(uint8_t x, uint8_t y, const char *str)
-{
-  while (*str)
+    uint8_t x = (uint8_t)_txtPosX +  1 ; // x-offset  1
+    uint8_t y = (uint8_t)_txtPosY + 26 ; // y-offset 26
+    _txtPosX += _fontWidth ;
+    cmd({0x2a, 4, { 0x00, x+0, 0x00, x+_fontWidth -1 } }) ;
+    cmd({0x2b, 4, { 0x00, y+0, 0x00, y+_fontHeight-1 } }) ;
+
+    // Memory Write
+    cmd(0x2c) ;
+  
+    csLo() ;
+    rsHi() ;
+
+    if ((' ' <= ch) || (ch <= '~'))
+      ch -= ' ' ;
+    else
+      ch = 0 ;
+
+    const uint8_t *charFont = _font + (uint8_t)ch * 16 ;
+  
+    for (uint8_t y = 0 ; y < 16 ; ++y)
+    {
+      for (uint8_t x = 0, c = charFont[y] ; x < 8 ; ++x, c >>= 1)
+      {
+        uint32_t rgb = (c & 0x01) ? _txtFg : _txtBg ;
+        _spi.putByte(rgb >> 16) ;
+        _spi.putByte(rgb >>  8) ;
+        _spi.putByte(rgb >>  0) ;
+      }
+    }  
+    while (_spi.isTransmit()) ;
+    csHi() ;
+  }
+  if (ch == 0x0a) // LF
   {
-    putChar(x, y, *(str++)) ;
-    x += 8 ;
+    _txtPosX = _txtAreaXmin ;
+    _txtPosY += _fontHeight ;
+    if ((_txtPosY + _fontHeight) > _txtAreaYmax+1)
+      _txtPosY  = _txtAreaYmin ;
+    return ;
+  }
+  if (ch == 0x0c) // FF
+  {
+    _txtPosX = _txtAreaXmin ;
+    _txtPosY = _txtAreaYmin ;
+    fill(_txtAreaXmin, _txtAreaXmax, _txtAreaYmin, _txtAreaYmax, _txtBg) ;
+    return ;
   }
 }
 
-void Lcd::fg(uint32_t col)
+void Lcd::putStr(const char *str)
 {
-  _fg = col ;
+  while (*str)
+    putChar(*(str++)) ;
 }
-void Lcd::bg(uint32_t col)
+
+void Lcd::txtArea(uint8_t xMin, uint8_t xMax, uint8_t yMin, uint8_t yMax)
 {
-  _bg = col ;
+  _txtAreaXmin = xMin ;
+  _txtAreaXmax = xMax ;
+  _txtAreaYmin = yMin ;
+  _txtAreaYmax = yMax ;
+  _txtPosX = xMin ;
+  _txtPosY = yMin ;
+
+  fill(_txtAreaXmin, _txtAreaXmax, _txtAreaYmin, _txtAreaYmax, _txtBg) ;
+}
+
+void Lcd::txtFg(uint32_t col)
+{
+  _txtFg = col ;
+}
+void Lcd::txtBg(uint32_t col)
+{
+  _txtBg = col ;
 }
 
 void Lcd::rstHi() { gpio_bit_set  (_gpio, _pinRst) ; }
