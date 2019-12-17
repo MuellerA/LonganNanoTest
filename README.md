@@ -72,4 +72,6 @@ upload_protocol = dfu</pre>
   <tr><th>Freq</th><td>Output wave signal on pin A8/CK_OUT0 (select wave form in main())</td></tr>
   <tr><th>Usart</th><td>USART0 (115200,8N1), Pins TX0, RX0</td></tr>
   <tr><th>Lcd</th><td>LCD 160x80</td></tr>
+  <tr><th>Dma</th><td>DMA mem to CRC register</td></tr>
+  <tr><th>UsartIrq</th><td>USART0 (115200,8N1), Echo serial input to serial output and LCD with 10 character per second, using 1k buffer</td></tr>
 </table>

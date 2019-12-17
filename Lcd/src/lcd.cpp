@@ -147,20 +147,23 @@ void Lcd::putChar(char ch)
     while (_spi.isTransmit()) ;
     csHi() ;
   }
-  if (ch == 0x0a) // LF
+  else
   {
-    _txtPosX = _txtAreaXmin ;
-    _txtPosY += _fontHeight ;
-    if ((_txtPosY + _fontHeight) > _txtAreaYmax+1)
-      _txtPosY  = _txtAreaYmin ;
-    return ;
-  }
-  if (ch == 0x0c) // FF
-  {
-    _txtPosX = _txtAreaXmin ;
-    _txtPosY = _txtAreaYmin ;
-    fill(_txtAreaXmin, _txtAreaXmax, _txtAreaYmin, _txtAreaYmax, _txtBg) ;
-    return ;
+    if (ch == 0x0a) // LF
+    {
+      _txtPosX = _txtAreaXmin ;
+      _txtPosY += _fontHeight ;
+      if ((_txtPosY + _fontHeight) > _txtAreaYmax+1)
+        _txtPosY  = _txtAreaYmin ;
+      return ;
+    }
+    if (ch == 0x0c) // FF
+    {
+      _txtPosX = _txtAreaXmin ;
+      _txtPosY = _txtAreaYmin ;
+      fill(_txtAreaXmin, _txtAreaXmax, _txtAreaYmin, _txtAreaYmax, _txtBg) ;
+      return ;
+    }
   }
 }
 
