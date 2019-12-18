@@ -1,3 +1,17 @@
+<h1>Tests</h1>
+
+<table>
+  <tr><th>Led</th><td>Onboard RGB Led</td></tr>
+  <tr><th>Freq</th><td>Output wave signal on pin A8/CK_OUT0 (select wave form in main())</td></tr>
+  <tr><th>Usart</th><td>USART0 (115200,8N1), Pins TX0, RX0</td></tr>
+  <tr><th>Lcd</th><td>LCD 160x80</td></tr>
+  <tr><th>Dma</th><td>DMA mem to CRC register</td></tr>
+  <tr><th>UsartIrq</th><td>USART0 (115200,8N1), Echo serial input to serial output and LCD with 10 character per second, using 1k buffer</td></tr>
+  <tr><th>PA8</th><td>Read GPIO PA8 which is connected to BOOT0 button</td></tr>
+</table>
+
+<h1>Resources</h1>
+
 <img src="https://longan.sipeed.com/assets/longan_nano_pin_map.png" alt="pin map"/>
 
 <p>
@@ -55,7 +69,7 @@ upload_protocol = dfu</pre>
   <tr><td>A5/SCK0</td><td>-</td><td>LCD SPI Clk</td>    <td>B5</td><td>-</td><td></td></tr>
   <tr><td>A6</td><td>-</td><td></td>                    <td>B6</td><td>*</td><td></td></tr>
   <tr><td>A7/MOSI0</td><td>-</td><td>LCD SPI MOSI</td>  <td>B7</td><td>*</td><td></td></tr>
-  <tr><td>A8</td><td>*</td><td></td>                    <td>B8</td><td>*</td><td></td></tr>
+  <tr><td>A8</td><td>*</td><td>10k PullDown?, connected to BOOT0 button active high</td><td>B8</td><td>*</td><td></td></tr>
   <tr><td>A9</td><td>*</td><td></td>                    <td>B9</td><td>*</td><td></td></tr>
   <tr><td>A10</td><td>*</td><td></td>                   <td>B10</td><td>*</td><td></td></tr>
   <tr><td>A11/USBFS_DM</td><td>*</td><td>USB D-</td>    <td>B11</td><td>*</td><td></td></tr>
@@ -64,14 +78,4 @@ upload_protocol = dfu</pre>
   <tr><td>A14</td><td>*</td><td></td>                   <td>B14/MISO1</td><td>*</td><td>TF CARD SPI MISO, 10k PullUp</td><td>C15/OSC32OUT</td><td>-</td><td>32kHz Clk</td></tr>
   <tr><td>A15</td><td>*</td><td></td>                   <td>B15/MOSI1</td><td>*</td><td>TF CARD SPI MOSI, 10k PullUp</td></tr>
   <tr><td colspan="99">[x] no available as header pin; 5VT (5 Volt Tolerant Input): * yes, - no</td></tr>
-</table>
-
-<table>
-  <tr><th colspan="99">Tests</th></tr>
-  <tr><th>Led</th><td>Onboard RGB Led</td></tr>
-  <tr><th>Freq</th><td>Output wave signal on pin A8/CK_OUT0 (select wave form in main())</td></tr>
-  <tr><th>Usart</th><td>USART0 (115200,8N1), Pins TX0, RX0</td></tr>
-  <tr><th>Lcd</th><td>LCD 160x80</td></tr>
-  <tr><th>Dma</th><td>DMA mem to CRC register</td></tr>
-  <tr><th>UsartIrq</th><td>USART0 (115200,8N1), Echo serial input to serial output and LCD with 10 character per second, using 1k buffer</td></tr>
 </table>
