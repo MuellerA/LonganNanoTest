@@ -59,7 +59,14 @@ namespace EspLink
     {
       uint8_t *_data ;
       uint32_t _len ;
-    } param[10] ;
+    } _param[10] ;
+  } ;
+
+  class Callback
+  {
+  public:
+    virtual void Receive(const RecvBuff&) = 0 ;
+    virtual void Close() = 0 ;
   } ;
   
   class Client
@@ -67,14 +74,31 @@ namespace EspLink
   public:
     Client(Usart &usart) ;
 
-    bool sync() ;     // sync with esp-link
-    bool wifiStatus() ;
-    bool unixTime() ;
+    bool sync() ;
+    void wifiStatus(uint8_t &status) ;
+    void unixTime(uint32_t &time) ;
     bool poll() ;
     const RecvBuff& recvBuff() ;
-    void recvComplete() ;
     
   private:
+    friend class WifiCallback ;
+    class WifiCallback : public Callback
+    {
+    public:
+      WifiCallback(Client &client) : _client{client}
+      {
+      }
+      virtual void Receive(const RecvBuff &rx)
+      {
+        _client._wifiStatus = rx._param[0]._data[0] ;
+      }
+      virtual void Close()
+      {
+      }
+    private:
+      Client &_client ;
+    } ;
+    
     static void crc(uint16_t &c, uint8_t b) ;
     void putNoEsc(uint8_t b) ;
     void put(uint8_t b) ;
@@ -82,12 +106,18 @@ namespace EspLink
     bool get(uint8_t &b, bool &end) ;
 
     void send(Cmd cmd, uint32_t ctx, uint16_t argc) ; // start
-    void send(uint8_t *data, uint16_t len) ;          // start.argc times
+    void send(uint8_t *data, uint16_t len) ;          // parameter * start.argc
     void send() ;                                     // end
 
     Usart &_usart ;
     uint16_t _crc ;
     RecvBuff _recvBuff ;
+
+    WifiCallback _wifiCallback ;
+    uint8_t  _wifiStatus{0} ;
+    uint32_t _unixTime{0} ;
+    uint64_t _unixTimeTick{0} ;
+    Callback *_callback[32] ; // [0]: nullptr, [1]: this->_wifiCallback, other: user's
   } ;
 }
 

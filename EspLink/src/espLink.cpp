@@ -19,9 +19,11 @@ namespace EspLink
   static const uint8_t SlipEscEsc = 0b11011101U ;
 
   Client::Client(Usart &usart)
-    : _usart{usart}
+    : _usart{usart}, _wifiCallback{*this}
   {
-    
+    for (size_t i = 0 ; i < 32 ; ++i)
+      _callback[i] = nullptr ;
+    _callback[1] = &_wifiCallback ;
   }
 
   void Client::putNoEsc(uint8_t b)
@@ -115,27 +117,34 @@ namespace EspLink
     _usart.put(SlipEnd) ; // new start
     
     _recvBuff._len = 0 ; // prepare recvBuff
-    
-    send(Cmd::Sync, 0x4711, 0) ;
+
+    send(Cmd::Sync, 1 /* -> _wifiCallback */, 0) ;
     send() ;
 
     return true ;
   }
 
-  bool Client::wifiStatus()
+  void Client::wifiStatus(uint8_t &status)
   {
-    _recvBuff._len = 0 ;
-    send(Cmd::WifiStatus, 0x1804, 0) ;
-    send() ;
-    return true ;
+    //dont call esp, use cached value instead
+    //send(Cmd::WifiStatus, 0, 0) ;
+    //send() ;
+    status = _wifiStatus ;
   }
 
-  bool Client::unixTime()
+  void Client::unixTime(uint32_t &time)
   {
-    _recvBuff._len = 0 ;
-    send(Cmd::GetTime, 0x0815, 0) ;
-    send() ;
-    return true ;
+    // use local time
+    if ((_unixTime < 946681200) ||                // got no time yet
+        (Tick::diffMs(_unixTimeTick) > 36000000)) // refresh
+    {
+      send(Cmd::GetTime, 0, 0) ;
+      send() ;
+      while (!poll()) ; // todo timeout
+      _unixTime = _recvBuff._ctx ;
+      _unixTimeTick = Tick::now() ;
+    }
+    time = _unixTime + Tick::diffMs(_unixTimeTick)/1000 ;
   }
 
   bool Client::poll()
@@ -173,11 +182,11 @@ namespace EspLink
     uint8_t *rawEnd = _recvBuff._raw + _recvBuff._len - 2 ;
     for (uint32_t iArg = 0, eArg = _recvBuff._argc ; iArg < eArg ; ++iArg)
     {
-      _recvBuff.param[iArg]._len  = *(uint16_t*)offset ;
+      _recvBuff._param[iArg]._len  = *(uint16_t*)offset ;
       offset += 2 ;
-      _recvBuff.param[iArg]._data = offset ; 
-      offset += _recvBuff.param[iArg]._len ;
-      offset += (4-((_recvBuff.param[iArg]._len+2)%4))%4 ; // padding
+      _recvBuff._param[iArg]._data = offset ; 
+      offset += _recvBuff._param[iArg]._len ;
+      offset += (4-((_recvBuff._param[iArg]._len+2)%4))%4 ; // padding
       if (offset > rawEnd)
         return false ;
     }
@@ -194,6 +203,26 @@ namespace EspLink
       return false ;
     }
 
+    switch ((EspLink::Cmd)_recvBuff._cmd)
+    {
+    case Cmd::Sync:
+      break ;
+    case Cmd::RespV:
+      break ;
+    case Cmd::RespCb:
+      {
+        uint32_t ctx = _recvBuff._ctx ;
+        if ((ctx < 32) && _callback[ctx])
+          _callback[ctx]->Receive(_recvBuff) ;
+        // todo error
+        break ;
+      }
+    default:
+      // todo error
+      break ;
+    }
+    _recvBuff._len = 0 ;
+    
     return true ;
   }
 
@@ -202,10 +231,6 @@ namespace EspLink
     return _recvBuff ;
   }
 
-  void Client::recvComplete()
-  {
-    _recvBuff._len = 0 ;
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

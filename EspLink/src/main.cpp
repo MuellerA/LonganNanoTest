@@ -38,52 +38,85 @@ int main()
   lcd.setup() ;
   usart.setup(115200UL) ;
 
-  printf("Hallo ESP-LINK!\n") ;
+  printf("Hallo ESP-LINK!") ;
+  fflush(stdout) ;
   
   uint64_t t0 = Tick::now() ;
-  uint32_t cnt = 0 ;
-  uint32_t msg = 0 ;
+  uint64_t tStatus = t0 ;
   
+  uint32_t cnt = 0 ;
+  enum class Msg
+    {
+     Sync,
+    } msg = Msg::Sync ;
+
   while (true)
   {
     if (Tick::diffMs(t0) > 2000)
     {
       t0 = Tick::now() ;
-      if (!msg)
-        lcd.txtPos(0, 0) ;
 
       switch (msg)
       {
-      case 0: espLink.sync()       ; msg += 1 ; break ;
-      case 1: espLink.wifiStatus() ; msg += 1 ; break ;
-      case 2: espLink.unixTime()   ; msg  = 0 ; break ;
+      case Msg::Sync:
+        espLink.sync() ;
+        msg = Msg::Sync ;
+        break ;
+      }
+    }
+
+    if (Tick::diffMs(tStatus) > 1000)
+    {
+      tStatus = Tick::now() ;
+
+      {
+        static uint8_t i ;
+        static const char *ch = "|/-\\" ;
+        uint8_t status ;
+        espLink.wifiStatus(status) ;
+        lcd.txtPos(17, 0) ;
+        printf("%c %d", ch[i++], status) ;
+        fflush(stdout) ;
+        if (!ch[i])
+          i = 0 ;
+      }
+      {
+        uint32_t time ;
+        espLink.unixTime(time) ;
+        lcd.txtPos(0,4) ;
+        lcd.txtBg(0xff0000) ;
+        lcd.txtFg(0x000000) ;
+        time %= 24*60*60 ;
+        uint32_t h = time / (60*60) ;
+        time %= 60*60 ;
+        uint32_t m = time / 60 ;
+        time %= 60 ;
+        uint32_t s = time / 1 ;
+        printf(" %02ld:%02ld:%02ld ", h,m,s) ;
+        fflush(stdout) ;
+        lcd.txtBg(0x000000) ;
+        lcd.txtFg(0xffffff) ;
       }
     }
     
     if (espLink.poll())
     {
       const EspLink::RecvBuff &rx = espLink.recvBuff() ;
-
-      printf("%u[%lu]", rx._cmd, ++cnt) ;
-      //printf(" %u", rx._argc) ;
-      printf(" %04lx  \n", rx._ctx) ;
-
-      if (msg == 0) // time
+      
+      lcd.txtPos(0, 1) ;
+      printf("%04lu: %2u %2lx %2u", ++cnt, rx._cmd, rx._ctx, rx._argc) ;
+      fflush(stdout) ;
+      for (uint32_t i = 0 ; (i < rx._argc) && (i < 2) ; ++i)
       {
-        lcd.txtBg(0xff0000) ;
-        lcd.txtFg(0x000000) ;
-        uint32_t d = rx._ctx ;
-        d %= 24*60*60 ;
-        uint32_t h = d / (60*60) ;
-        d %= 60*60 ;
-        uint32_t m = d / 60 ;
-        d %= 60 ;
-        uint32_t s = d / 1 ;
-        printf(" %02ld:%02ld:%02ld \n", h,m,s) ;        
-        lcd.txtBg(0x000000) ;
-        lcd.txtFg(0xffffff) ;
+        uint32_t  len = rx._param[i]._len ;
+        uint8_t *data = rx._param[i]._data ;
+        
+        lcd.txtPos(0, i+2) ;
+        printf("[%lu] %2lu", i, len) ;
+        for (uint32_t j = 0 ; (j < len) && (j < 4) ; ++j)
+          printf(" %02x", data[j]) ;
+        fflush(stdout) ;
       }
-      espLink.recvComplete() ;
     }
   }
 

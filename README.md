@@ -8,7 +8,7 @@
   <tr><th>Dma</th><td>DMA mem to CRC register</td></tr>
   <tr><th>UsartIrq</th><td>USART0 (115200,8N1), Echo serial input to serial output and LCD with 10 character per second, using 1k buffer</td></tr>
   <tr><th>PA8</th><td>Read GPIO PA8 which is connected to BOOT0 button</td></tr>
-  <tr><th>EspLink</th><td>Connect Rx0/Tx0/Gnd/Rst to an ESP8266 running <a href="https://github.com/jeelabs/esp-link">esl-link v2.2.3</a></td></tr>
+  <tr><th>EspLink</th><td>Connect Rx0/Tx0/Gnd/Rst to an ESP8266 running <a href="https://github.com/jeelabs/esp-link">esp-link v2.2.3</a></td></tr>
 </table>
 
 <h1>Resources</h1>
