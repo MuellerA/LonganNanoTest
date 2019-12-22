@@ -124,6 +124,20 @@ namespace EspLink
     return true ;
   }
 
+  bool Client::webSetup(ClientCallback *cb)
+  {
+    uint32_t id ;
+    for (id = 2 ; (id < 32) && _callback[id] ; ++id) ;
+    if (id == 32)
+      return false ;
+
+    _callback[id] = cb ;
+    send(Cmd::WebSetup, 0, 1) ;
+    send((uint8_t*)&id, 4) ;
+    send() ;
+    return true ;
+  }
+  
   void Client::wifiStatus(uint8_t &status)
   {
     //dont call esp, use cached value instead
@@ -134,7 +148,7 @@ namespace EspLink
 
   void Client::unixTime(uint32_t &time)
   {
-    // use local time
+    // use local time if possible
     if ((_unixTime < 946681200) ||                // got no time yet
         (Tick::diffMs(_unixTimeTick) > 36000000)) // refresh
     {
