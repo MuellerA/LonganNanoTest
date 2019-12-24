@@ -30,15 +30,18 @@ namespace EspLink
     bool addCallback(const std::string &url, WebServerCallback *cb) ;
     bool removeCallback(const std::string &url) ;
 
-    void sendParameter(const std::string &key, const std::string &val) const ; // only call from WebServerCallback
+    bool sendParameter(const std::string &key, const std::string &val) const ; // only call from WebServerCallback::PageLoad/Refresh
+    bool getParameter(std::string &val) const ; // only call from WebServerCallback::ButtonPress
+    bool getParameter(const std::string &key, std::string &val) const ; // only call from WebServerCallback::FormSubmit
     
     // ClientCallback
-    virtual void Receive(const RecvBuff&) ;
-    virtual void Close() ;
+    virtual void rx(const Pdu&) ;
+    virtual void close() ;
     
   private:
     Client &_client ;
     std::map<std::string, WebServerCallback*> _callbacks ;
+    const Pdu *_rxPdu ;
   } ;
 }
 

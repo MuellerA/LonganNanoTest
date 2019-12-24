@@ -7,12 +7,13 @@ extern "C"
 #include "gd32vf103.h"
 }
 
+#include <string.h>
 #include "elWebServer.h"
 
 namespace EspLink
 {
   WebServer::WebServer(Client &client)
-    : _client{client}
+    : _client{client}, _rxPdu{nullptr}
   {
   }
 
@@ -39,24 +40,64 @@ namespace EspLink
     return true ;
   }
 
-  void WebServer::sendParameter(const std::string &key, const std::string &val) const
+  bool WebServer::sendParameter(const std::string &key, const std::string &val) const
   {
+    if (!_rxPdu)
+      return false ;
+    
     std::string null{"\000", 1} ;
     std::string param{null + key + null + val} ;
     _client.send((uint8_t*)param.data(), param.size()) ;
+    return true ;
+  }
+
+  bool WebServer::getParameter(std::string &val) const
+  {
+    if (!_rxPdu)
+      return false ;
+
+    if (_rxPdu->_argc < 4)
+      return false ;
+
+    val.assign((char*)_rxPdu->_param[4]._data, _rxPdu->_param[4]._len) ;
+
+    return true ;
   }
   
-  void WebServer::Receive(const RecvBuff &rx)
+  bool WebServer::getParameter(const std::string &key, std::string &val) const
   {
-    uint16_t cmd{*(uint16_t*)rx._param[0]._data} ;
-    uint8_t *addr{rx._param[1]._data} ;
-    uint8_t *port{rx._param[2]._data} ;
-    std::string url{(char*)rx._param[3]._data, rx._param[3]._len} ;
+    if (!_rxPdu)
+      return false ;
+    
+    for (uint16_t iParam = 4 ; iParam < _rxPdu->_argc ; ++iParam)
+    {
+      char *paramKey = (char*)_rxPdu->_param[iParam]._data+1 ;
+      if (!key.compare(paramKey))
+      {
+        char *paramVal = paramKey + strlen(paramKey) + 1 ;
+        uint16_t paramLen = _rxPdu->_param[iParam]._len - (paramVal - paramKey) - 1 ;
+        val.assign(paramVal, paramLen) ;
+        return true ;
+      }
+    }
+    return false ;
+  }
+  
+  void WebServer::rx(const Pdu &rxPdu)
+  {
+    _rxPdu = &rxPdu ;
+    uint16_t cmd{*(uint16_t*)rxPdu._param[0]._data} ;
+    uint8_t *addr{rxPdu._param[1]._data} ;
+    uint8_t *port{rxPdu._param[2]._data} ;
+    std::string url{(char*)rxPdu._param[3]._data, rxPdu._param[3]._len} ;
 
     auto iCb = _callbacks.find(url) ;
     if (iCb == _callbacks.end())
+    {
+      _rxPdu = nullptr ;
       return ;
-    
+    }
+
     switch (cmd)
     {
     case 0: // page load
@@ -64,10 +105,10 @@ namespace EspLink
       // nothing
       break ;
     case 2: // button press
-      // todo
+      iCb->second->ButtonPress(*this, url) ;
       break ;
     case 3: // form submit
-      // todo
+      iCb->second->FormSubmit(*this, url) ;
       break ;
     }
 
@@ -82,9 +123,11 @@ namespace EspLink
 
     _client.send(nullptr, 0) ; // arg end marker
     _client.send() ;
+
+    _rxPdu = nullptr ;
   }
 
-  void WebServer::Close()
+  void WebServer::close()
   {
     for (auto iCb : _callbacks)
       iCb.second->Close() ;

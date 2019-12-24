@@ -9,6 +9,7 @@
 #include <map>
 
 #include "usart.h"
+#include "tick.h"
 
 namespace EspLink
 {
@@ -49,7 +50,7 @@ namespace EspLink
     GotIp             // Connected, received IP 
   };
 
-  struct RecvBuff
+  struct Pdu
   {
     static const uint32_t _size = 2000 ;
     uint8_t _raw[_size] ;
@@ -69,8 +70,8 @@ namespace EspLink
   class ClientCallback
   {
   public:
-    virtual void Receive(const RecvBuff&) = 0 ;
-    virtual void Close() = 0 ;
+    virtual void rx(const Pdu&) = 0 ;
+    virtual void close() = 0 ;
   } ;
   
   class Client
@@ -84,7 +85,7 @@ namespace EspLink
     void wifiStatus(uint8_t &status) ;
     void unixTime(uint32_t &time) ;
     bool poll() ;
-    const RecvBuff& recvBuff() ;
+    const Pdu& rxPdu() ;
     
   private:
     friend class WifiCallback ;
@@ -94,11 +95,11 @@ namespace EspLink
       WifiCallback(Client &client) : _client{client}
       {
       }
-      virtual void Receive(const RecvBuff &rx)
+      virtual void rx(const Pdu &rxPdu)
       {
-        _client._wifiStatus = rx._param[0]._data[0] ;
+        _client._wifiStatus = rxPdu._param[0]._data[0] ;
       }
-      virtual void Close()
+      virtual void close()
       {
       }
     private:
@@ -117,12 +118,12 @@ namespace EspLink
 
     Usart &_usart ;
     uint16_t _crc ;
-    RecvBuff _recvBuff ;
+    Pdu _rxPdu ;
 
     WifiCallback _wifiCallback ;
     uint8_t  _wifiStatus{0} ;
     uint32_t _unixTime{0} ;
-    uint64_t _unixTimeTick{0} ;
+    Tick::MsTimer _unixTimeTick{3600000, true} ;
     ClientCallback *_callback[32] ; // [0]: nullptr, [1]: this->_wifiCallback, other: user's
   } ;
 }

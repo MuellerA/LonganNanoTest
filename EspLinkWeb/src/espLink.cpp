@@ -8,7 +8,7 @@ extern "C"
 }
 
 #include <functional>
-#include "delay.h"
+#include "tick.h"
 #include "espLink.h"
 
 namespace EspLink
@@ -116,7 +116,7 @@ namespace EspLink
   {
     _usart.put(SlipEnd) ; // new start
     
-    _recvBuff._len = 0 ; // prepare recvBuff
+    _rxPdu._len = 0 ; // prepare pdu
 
     send(Cmd::Sync, 1 /* -> _wifiCallback */, 0) ;
     send() ;
@@ -150,15 +150,14 @@ namespace EspLink
   {
     // use local time if possible
     if ((_unixTime < 946681200) ||                // got no time yet
-        (Tick::diffMs(_unixTimeTick) > 36000000)) // refresh
+        (_unixTimeTick())) // refresh
     {
       send(Cmd::GetTime, 0, 0) ;
       send() ;
       while (!poll()) ; // todo timeout
-      _unixTime = _recvBuff._ctx ;
-      _unixTimeTick = Tick::now() ;
+      _unixTime = _rxPdu._ctx ;
     }
-    time = _unixTime + Tick::diffMs(_unixTimeTick)/1000 ;
+    time = _unixTime + _unixTimeTick.elapsed()/1000 ;
   }
 
   bool Client::poll()
@@ -169,38 +168,38 @@ namespace EspLink
       return false ;
     if (!end)
     {
-      if (_recvBuff._len == _recvBuff._size)
+      if (_rxPdu._len == _rxPdu._size)
       {
         return false ; // todo error
       }
-      _recvBuff._raw[_recvBuff._len++] = b ;
+      _rxPdu._raw[_rxPdu._len++] = b ;
       return false ;
     }
 
-    if (_recvBuff._len == 0) // recv sync
+    if (_rxPdu._len == 0) // rx sync
       return false ;
     
-    if (_recvBuff._len < 10)
+    if (_rxPdu._len < 10)
     {
       // todo error
       return false ;
     }
     
     // decode header
-    _recvBuff._cmd  = *(uint16_t*) (_recvBuff._raw + 0x00) ;
-    _recvBuff._argc = *(uint16_t*) (_recvBuff._raw + 0x02) ;
-    _recvBuff._ctx  = *(uint32_t*) (_recvBuff._raw + 0x04) ;
+    _rxPdu._cmd  = *(uint16_t*) (_rxPdu._raw + 0x00) ;
+    _rxPdu._argc = *(uint16_t*) (_rxPdu._raw + 0x02) ;
+    _rxPdu._ctx  = *(uint32_t*) (_rxPdu._raw + 0x04) ;
 
     // check parameters
-    uint8_t *offset = _recvBuff._raw + 8 ;
-    uint8_t *rawEnd = _recvBuff._raw + _recvBuff._len - 2 ;
-    for (uint32_t iArg = 0, eArg = _recvBuff._argc ; iArg < eArg ; ++iArg)
+    uint8_t *offset = _rxPdu._raw + 8 ;
+    uint8_t *rawEnd = _rxPdu._raw + _rxPdu._len - 2 ;
+    for (uint32_t iArg = 0, eArg = _rxPdu._argc ; iArg < eArg ; ++iArg)
     {
-      _recvBuff._param[iArg]._len  = *(uint16_t*)offset ;
+      _rxPdu._param[iArg]._len  = *(uint16_t*)offset ;
       offset += 2 ;
-      _recvBuff._param[iArg]._data = offset ; 
-      offset += _recvBuff._param[iArg]._len ;
-      offset += (4-((_recvBuff._param[iArg]._len+2)%4))%4 ; // padding
+      _rxPdu._param[iArg]._data = offset ; 
+      offset += _rxPdu._param[iArg]._len ;
+      offset += (4-((_rxPdu._param[iArg]._len+2)%4))%4 ; // padding
       if (offset > rawEnd)
         return false ;
     }
@@ -208,16 +207,16 @@ namespace EspLink
       return false ;
 
     // check crc
-    _recvBuff._crc = 0 ;
-    for (uint32_t i = 0, e = _recvBuff._len - 2 ; i < e ; ++i)
-      crc(_recvBuff._crc, _recvBuff._raw[i]) ;
-    if (_recvBuff._crc != *(uint16_t*)(_recvBuff._raw + _recvBuff._len - 2))
+    _rxPdu._crc = 0 ;
+    for (uint32_t i = 0, e = _rxPdu._len - 2 ; i < e ; ++i)
+      crc(_rxPdu._crc, _rxPdu._raw[i]) ;
+    if (_rxPdu._crc != *(uint16_t*)(_rxPdu._raw + _rxPdu._len - 2))
     {
       // todo error
       return false ;
     }
 
-    switch ((EspLink::Cmd)_recvBuff._cmd)
+    switch ((EspLink::Cmd)_rxPdu._cmd)
     {
     case Cmd::Sync:
       break ;
@@ -225,9 +224,9 @@ namespace EspLink
       break ;
     case Cmd::RespCb:
       {
-        uint32_t ctx = _recvBuff._ctx ;
+        uint32_t ctx = _rxPdu._ctx ;
         if ((ctx < 32) && _callback[ctx])
-          _callback[ctx]->Receive(_recvBuff) ;
+          _callback[ctx]->rx(_rxPdu) ;
         // todo error
         break ;
       }
@@ -235,14 +234,14 @@ namespace EspLink
       // todo error
       break ;
     }
-    _recvBuff._len = 0 ;
+    _rxPdu._len = 0 ;
     
     return true ;
   }
 
-  const RecvBuff& Client::recvBuff()
+  const Pdu& Client::rxPdu()
   {
-    return _recvBuff ;
+    return _rxPdu ;
   }
 
 }

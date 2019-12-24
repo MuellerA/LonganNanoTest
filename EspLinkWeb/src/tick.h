@@ -1,0 +1,31 @@
+////////////////////////////////////////////////////////////////////////////////
+// tick.h
+////////////////////////////////////////////////////////////////////////////////
+
+#pragma once
+
+namespace Tick
+{
+  uint64_t now() ;
+
+  void delayMs(uint32_t ms = 1) ;
+  void delayUs(uint32_t us = 1) ;
+
+  class MsTimer
+  {
+  public:
+    MsTimer(uint32_t ms, bool cyclic = false, bool exact = false) ;
+    bool operator()() ; // has expired
+    uint32_t elapsed() ; // ms since started
+    void reset() ;
+  private:
+    uint64_t _timeTick ;
+    uint64_t _deltaTick ;
+    bool _cyclic ;
+    bool _exact ;
+  } ;
+} ;
+
+////////////////////////////////////////////////////////////////////////////////
+// EOF
+////////////////////////////////////////////////////////////////////////////////

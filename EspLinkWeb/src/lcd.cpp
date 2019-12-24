@@ -7,7 +7,7 @@ extern "C"
 #include "gd32vf103.h"
 }
 
-#include "delay.h"
+#include "tick.h"
 #include "spi.h"
 #include "lcd.h"
 

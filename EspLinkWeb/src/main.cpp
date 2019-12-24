@@ -9,7 +9,7 @@ extern "C"
 
 #include <stdio.h>
 
-#include "delay.h"
+#include "tick.h"
 #include "spi.h"
 #include "lcd.h"
 #include "usart.h"
@@ -35,11 +35,11 @@ extern "C" int _put_char(int ch) // used by printf
 
 void heartbeat()
 {
-  static uint64_t t0 ;
+  static Tick::MsTimer tHeartBeat{250, true} ;
   static uint8_t i ;
   static const char *ch = "|/-\\" ;
 
-  if (Tick::elapsedMs(t0, 250))
+  if (tHeartBeat())
   {
     lcd.txtPos(19, 0) ;
     lcd.putChar(ch[i++]) ;
@@ -50,6 +50,12 @@ void heartbeat()
 
 class LonganHtml : public EspLink::WebServerCallback
 {
+public:
+  LonganHtml(const std::string ebbes)
+    : _ebbes{ebbes}, _status{false}
+  {
+  }
+  
   // WebsServerCallback
   virtual void PageLoad(const EspLink::WebServer &server, const std::string &page)
   {
@@ -61,11 +67,21 @@ class LonganHtml : public EspLink::WebServerCallback
   }
   virtual void ButtonPress(const EspLink::WebServer &server, const std::string &page)
   {
-    // todo
+    std::string button ;
+    if (!server.getParameter(button))
+      return ;
+    if      (button == "an" ) _status = true ;
+    else if (button == "aus") _status = false ;
+    lcd.txtPos(0, 1) ;
+    lcd.putStr(_status ? "an" : "aus") ;
   }
   virtual void FormSubmit(const EspLink::WebServer &server, const std::string &page)
   {
-    // todo
+    std::string ebbes ;
+    if (!server.getParameter("ebbes", _ebbes))
+      _ebbes = "nix" ;
+    lcd.txtPos(0, 2) ;
+    lcd.putStr(_ebbes.c_str()) ;
   }
   virtual void Close()
   {
@@ -79,15 +95,20 @@ class LonganHtml : public EspLink::WebServerCallback
     server.sendParameter("p1", "Das ist ein schoener Text!") ;
     sprintf(buff, "%lu", ++cnt) ;
     server.sendParameter("zahl", buff) ;
+    server.sendParameter("ebbes", _ebbes) ;
+    server.sendParameter("status", _status ? "An" : "Aus") ;
   }
-  
+
+private:
+  std::string _ebbes ;
+  bool _status ;
 } ;
 
 
 int main()
 {
   EspLink::WebServer elWebServer{espLink} ;
-  LonganHtml longanHtml ;
+  LonganHtml longanHtml("was") ;
   
   spi.setup() ;
   lcd.setup() ;
@@ -96,8 +117,8 @@ int main()
   printf("Hallo ESP-LINK!") ;
   fflush(stdout) ;
   
-  uint64_t t0 = Tick::now() ;
-  uint64_t tTime = t0 ;
+  Tick::MsTimer tSync{1000, true} ;
+  Tick::MsTimer tTime{1000, true} ;
   
   uint32_t cnt = 0 ;
 
@@ -109,7 +130,7 @@ int main()
   {
     heartbeat() ;
     
-    if (Tick::elapsedMs(t0, 1000)) // repeat every second
+    if (tSync()) // repeat every second
     {
       espLink.sync() ;
       lcd.txtPos(8, 1) ;
@@ -118,10 +139,10 @@ int main()
     }
     if (espLink.poll())
     {
-      const EspLink::RecvBuff &rx = espLink.recvBuff() ;
-      if ((rx._cmd == (uint16_t)EspLink::Cmd::RespV) &&
-          (rx._ctx == 1) &&
-          (rx._argc == 0))
+      const EspLink::Pdu &rxPdu = espLink.rxPdu() ;
+      if ((rxPdu._cmd == (uint16_t)EspLink::Cmd::RespV) &&
+          (rxPdu._ctx == 1) &&
+          (rxPdu._argc == 0))
         break ;
     }
   }
@@ -135,7 +156,7 @@ int main()
   {
     heartbeat() ;
     
-    if (Tick::elapsedMs(tTime, 1000))
+    if (tTime())
     {
       uint32_t time ;
       espLink.unixTime(time) ;
@@ -154,17 +175,17 @@ int main()
       lcd.txtFg(0xffffff) ;
     }
     
-    if (espLink.poll())
+    if (espLink.poll() && false)
     {
-      const EspLink::RecvBuff &rx = espLink.recvBuff() ;
+      const EspLink::Pdu &rxPdu = espLink.rxPdu() ;
       
       lcd.txtPos(0, 1) ;
-      printf("%04lu: %2u %2lx %2u", ++cnt, rx._cmd, rx._ctx, rx._argc) ;
+      printf("%04lu: %2u %2lx %2u  ", ++cnt, rxPdu._cmd, rxPdu._ctx, rxPdu._argc) ;
       fflush(stdout) ;
-      for (uint32_t i = 0 ; (i < rx._argc) && (i < 2) ; ++i)
+      for (uint32_t i = 0 ; (i < rxPdu._argc) && (i < 2) ; ++i)
       {
-        uint32_t  len = rx._param[i]._len ;
-        uint8_t *data = rx._param[i]._data ;
+        uint32_t  len = rxPdu._param[i]._len ;
+        uint8_t *data = rxPdu._param[i]._data ;
         
         lcd.txtPos(0, i+2) ;
         printf("[%lu] %2lu", i, len) ;
