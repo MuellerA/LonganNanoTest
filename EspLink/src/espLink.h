@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "usart.h"
+#include "GD32VF103/usart.h"
 
 namespace EspLink
 {
@@ -72,7 +72,7 @@ namespace EspLink
   class Client
   {
   public:
-    Client(Usart &usart) ;
+    Client(::RV::GD32VF103::Usart &usart) ;
 
     bool sync() ;
     void wifiStatus(uint8_t &status) ;
@@ -109,14 +109,14 @@ namespace EspLink
     void send(uint8_t *data, uint16_t len) ;          // parameter * start.argc
     void send() ;                                     // end
 
-    Usart &_usart ;
+    ::RV::GD32VF103::Usart &_usart ;
     uint16_t _crc ;
     RecvBuff _recvBuff ;
 
     WifiCallback _wifiCallback ;
     uint8_t  _wifiStatus{0} ;
     uint32_t _unixTime{0} ;
-    uint64_t _unixTimeTick{0} ;
+    ::RV::GD32VF103::TickTimer _unixTimeTick{3600000, true} ;
     Callback *_callback[32] ; // [0]: nullptr, [1]: this->_wifiCallback, other: user's
   } ;
 }

@@ -8,8 +8,11 @@ extern "C"
 }
 
 #include <functional>
-#include "tick.h"
+#include "GD32VF103/time.h"
 #include "espLink.h"
+
+using ::RV::GD32VF103::TickTimer ;
+using ::RV::GD32VF103::Usart ;
 
 namespace EspLink
 {
@@ -29,7 +32,7 @@ namespace EspLink
   void Client::putNoEsc(uint8_t b)
   {
     while (!_usart.put(b))
-      Tick::delayMs() ;
+      TickTimer::delayMs() ;
   }
 
   void Client::crc(uint16_t &c, uint8_t b)
@@ -150,14 +153,14 @@ namespace EspLink
   {
     // use local time if possible
     if ((_unixTime < 946681200) ||                // got no time yet
-        (_unixTimeTick())) // refresh
+        _unixTimeTick()) // refresh
     {
       send(Cmd::GetTime, 0, 0) ;
       send() ;
       while (!poll()) ; // todo timeout
       _unixTime = _rxPdu._ctx ;
     }
-    time = _unixTime + _unixTimeTick.elapsed()/1000 ;
+    time = _unixTime + _unixTimeTick.elapsedMs()/1000 ;
   }
 
   bool Client::poll()

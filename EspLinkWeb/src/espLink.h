@@ -8,8 +8,8 @@
 #include <vector>
 #include <map>
 
-#include "usart.h"
-#include "tick.h"
+#include "GD32VF103/usart.h"
+#include "GD32VF103/time.h"
 
 namespace EspLink
 {
@@ -78,7 +78,7 @@ namespace EspLink
   {
     friend class WebServer ;
   public:
-    Client(Usart &usart) ;
+    Client(::RV::GD32VF103::Usart &usart) ;
 
     bool sync() ;
     bool webSetup(ClientCallback *cb) ;
@@ -116,14 +116,14 @@ namespace EspLink
     void send(uint8_t *data, uint16_t len) ;          // parameter * start.argc
     void send() ;                                     // end
 
-    Usart &_usart ;
+    ::RV::GD32VF103::Usart &_usart ;
     uint16_t _crc ;
     Pdu _rxPdu ;
 
     WifiCallback _wifiCallback ;
     uint8_t  _wifiStatus{0} ;
     uint32_t _unixTime{0} ;
-    Tick::MsTimer _unixTimeTick{3600000, true} ;
+    ::RV::GD32VF103::TickTimer _unixTimeTick{3600000, true} ;
     ClientCallback *_callback[32] ; // [0]: nullptr, [1]: this->_wifiCallback, other: user's
   } ;
 }

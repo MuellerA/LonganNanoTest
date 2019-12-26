@@ -9,18 +9,20 @@ extern "C"
 
 #include <stdio.h>
 
-#include "tick.h"
-#include "spi.h"
-#include "lcd.h"
-#include "usart.h"
+#include "GD32VF103/time.h"
+#include "GD32VF103/usart.h"
+#include "Longan/lcd.h"
 #include "espLink.h"
 #include "elWebServer.h"
 
+using ::RV::GD32VF103::TickTimer ;
+using ::RV::GD32VF103::Usart ;
+using ::RV::Longan::Lcd ;
+
 extern "C" const uint8_t font[1520] ;
 
-Spi0 spi ;
-Lcd lcd{spi, font, 16, 8} ;
-Usart0 usart ;
+Usart &usart{Usart::usart0()} ;
+Lcd &lcd{Lcd::lcd()} ;
 EspLink::Client espLink{usart} ;
 
 extern "C" int _put_char(int ch) // used by printf
@@ -29,20 +31,20 @@ extern "C" int _put_char(int ch) // used by printf
   //lcd.putChar(hex[(ch>>4) & 0x0f]) ;
   //lcd.putChar(hex[(ch>>0) & 0x0f]) ;
   //lcd.putChar(' ') ;
-  lcd.putChar(ch) ;
+  lcd.put(ch) ;
   return ch ;
 }
 
 void heartbeat()
 {
-  static Tick::MsTimer tHeartBeat{250, true} ;
+  static TickTimer tHeartBeat{250, true} ;
   static uint8_t i ;
   static const char *ch = "|/-\\" ;
 
   if (tHeartBeat())
   {
-    lcd.txtPos(19, 0) ;
-    lcd.putChar(ch[i++]) ;
+    lcd.txtPos(0, 19) ;
+    lcd.put(ch[i++]) ;
     if (!ch[i])
       i = 0 ;    
   }
@@ -72,16 +74,16 @@ public:
       return ;
     if      (button == "an" ) _status = true ;
     else if (button == "aus") _status = false ;
-    lcd.txtPos(0, 1) ;
-    lcd.putStr(_status ? "an" : "aus") ;
+    lcd.txtPos(1) ;
+    lcd.put(_status ? "an" : "aus") ;
   }
   virtual void FormSubmit(const EspLink::WebServer &server, const std::string &page)
   {
     std::string ebbes ;
     if (!server.getParameter("ebbes", _ebbes))
       _ebbes = "nix" ;
-    lcd.txtPos(0, 2) ;
-    lcd.putStr(_ebbes.c_str()) ;
+    lcd.txtPos(2) ;
+    lcd.put(_ebbes.c_str()) ;
   }
   virtual void Close()
   {
@@ -110,21 +112,20 @@ int main()
   EspLink::WebServer elWebServer{espLink} ;
   LonganHtml longanHtml("was") ;
   
-  spi.setup() ;
-  lcd.setup() ;
+  lcd.setup(font, 16, 8) ;
   usart.setup(115200UL) ;
 
   printf("Hallo ESP-LINK!") ;
   fflush(stdout) ;
   
-  Tick::MsTimer tSync{1000, true} ;
-  Tick::MsTimer tTime{1000, true} ;
+  TickTimer tSync{1000, true} ;
+  TickTimer tTime{1000, true} ;
   
   uint32_t cnt = 0 ;
 
   // sync with ESP
-  lcd.txtPos(0, 1) ;
-  lcd.putStr("Syncing * ") ;
+  lcd.txtPos(1) ;
+  lcd.put("Syncing * ") ;
   bool toggle = false ;
   while (true)
   {
@@ -133,8 +134,8 @@ int main()
     if (tSync()) // repeat every second
     {
       espLink.sync() ;
-      lcd.txtPos(8, 1) ;
-      lcd.putStr(toggle ? "* " : " *") ;
+      lcd.txtPos(1, 8) ;
+      lcd.put(toggle ? "* " : " *") ;
       toggle = !toggle ;
     }
     if (espLink.poll())
@@ -146,8 +147,8 @@ int main()
         break ;
     }
   }
-  lcd.txtPos(0, 1) ;
-  lcd.putStr("          ") ;
+  lcd.txtPos(1) ;
+  lcd.put("          ") ;
 
   elWebServer.addCallback("/longan.html.json", &longanHtml) ;
   elWebServer.setup() ;
@@ -160,7 +161,7 @@ int main()
     {
       uint32_t time ;
       espLink.unixTime(time) ;
-      lcd.txtPos(0,4) ;
+      lcd.txtPos(4) ;
       lcd.txtBg(0xff0000) ;
       lcd.txtFg(0x000000) ;
       time %= 24*60*60 ;
@@ -179,7 +180,7 @@ int main()
     {
       const EspLink::Pdu &rxPdu = espLink.rxPdu() ;
       
-      lcd.txtPos(0, 1) ;
+      lcd.txtPos(1) ;
       printf("%04lu: %2u %2lx %2u  ", ++cnt, rxPdu._cmd, rxPdu._ctx, rxPdu._argc) ;
       fflush(stdout) ;
       for (uint32_t i = 0 ; (i < rxPdu._argc) && (i < 2) ; ++i)
@@ -187,7 +188,7 @@ int main()
         uint32_t  len = rxPdu._param[i]._len ;
         uint8_t *data = rxPdu._param[i]._data ;
         
-        lcd.txtPos(0, i+2) ;
+        lcd.txtPos(i+2) ;
         printf("[%lu] %2lu", i, len) ;
         for (uint32_t j = 0 ; (j < len) && (j < 4) ; ++j)
           printf(" %02x", data[j]) ;
