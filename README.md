@@ -15,8 +15,9 @@
 
 <h1>Resources</h1>
 
-<img src="https://longan.sipeed.com/assets/longan_nano_pin_map.png" alt="pin map"/>
+<img src="https://longan.sipeed.com/assets/longan_nano_pin_map.png" alt="pin map" width="100%"/>
 
+<h2>Boards</h2>
 <p>
 <table>
 <tr><th>Board</th><th>MCU</th><th>Flash</th><th>SRAM</th></tr>
@@ -25,8 +26,8 @@
 </table>
 </p>
 
+<h2>Documentation, Examples, etc</h2>
 <table>
-  <tr><th colspan="99">Documentation, Examples, etc</th></tr>
   <tr><td>Sipeed Longan Nano <a href="http://dl.sipeed.com/LONGAN/Nano/">Specs Tools</a> <a href="https://longan.sipeed.com/en/">Wiki</a> <a href="https://bbs.sipeed.com/c/14-category">BBS</a></td></tr>
   <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/222/path_type/1">GD32VF103 User Manual 1.2</a></td></tr>
   <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/221/path_type/1">GD32VF103 Datasheet 1.1</a></td></tr>
@@ -36,7 +37,7 @@
   <tr><td><a href="https://content.riscv.org/wp-content/uploads/2019/06/riscv-spec.pdf">The RISC-V Instruction Set Manual Volume I: Unprivileged ISA</a></td></tr>
 </table>
 
-<p>platformio.ini</p>
+<h2>platformio.ini</h2>
 <pre>
 [env:sipeed-longan-nano-lite]
 platform = gd32v
@@ -50,7 +51,9 @@ board = sipeed-longan-nano
 framework = gd32vf103-sdk
 upload_protocol = dfu</pre>
 
-<p>DFU Upload (Linux)
+Longan Nano Lite needs the <a href="https://github.com/sipeed/platform-gd32v">development version of the GD32V platform</a> (2019-12).
+
+<h2>DFU Upload (Linux)</h2>
 <ol>
  <li>connect USB</li>
  <li>press buttons RESET, BOOT0</li>
@@ -58,10 +61,9 @@ upload_protocol = dfu</pre>
  <li>release button BOOT0</li>
  <li>start upload in PlatformIO</li>
 </ol>
-</p>
 
+<h2>PIN Connections</h2>
 <table>
-  <tr><th colspan="99">PIN Connections</th></tr>
   <tr><th colspan="3">A</th><th colspan="3">B</th><th colspan="3">C</th><th colspan="3">D</th>
   <tr><th>Pin</th><th>5VT</th><th>OnBoard Function</th><th>Pin</th><th>5VT</th><th>OnBoard Function</th><th>Pin</th><th>5VT</th><th>OnBoard Function</th><th>Pin</th><th>5VT</th><th>OnBoard Function</th></tr>
   <tr><td>A0</td><td>-</td><td></td>                    <td>B0</td><td>-</td><td>LCD RS</td>                             <td></td><td></td><td></td>  <td>[D0/OSCIN]</td><td>-</td><td>8MHz Clk</td></tr>

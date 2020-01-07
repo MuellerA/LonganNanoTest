@@ -29,23 +29,6 @@ Lcd1602I2c &lcd1602{Lcd1602I2c::lcd1602I2c(i2c)} ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void heartbeat()
-{
-  static TickTimer tHeartBeat{250, true} ;
-  static uint8_t i ;
-  static const char *ch = "|/-\\" ;
-
-  if (tHeartBeat())
-  {
-    lcd.txtPos(0, 19) ;
-    lcd.put(ch[i++]) ;
-    if (!ch[i])
-      i = 0 ;    
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 int main()
 {
   i2c.setup(42, 400000U) ;
@@ -53,7 +36,7 @@ int main()
   lcd1602.setup(I2Caddr_LCD) ;
 
   lcd.put("Hallo I2C!") ;
-  heartbeat() ;
+  lcd.heartbeat() ;
 
   const char *zeilen[] =
     {
@@ -71,7 +54,7 @@ int main()
   TickTimer tUpdate1602{880, true} ;
   while (true)
   {
-    heartbeat() ;
+    lcd.heartbeat() ;
 
     if (tUpdate1602())
     {

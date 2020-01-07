@@ -35,21 +35,6 @@ extern "C" int _put_char(int ch) // used by printf
   return ch ;
 }
 
-void heartbeat()
-{
-  static TickTimer tHeartBeat{250, true} ;
-  static uint8_t i ;
-  static const char *ch = "|/-\\" ;
-
-  if (tHeartBeat())
-  {
-    lcd.txtPos(0, 19) ;
-    lcd.put(ch[i++]) ;
-    if (!ch[i])
-      i = 0 ;    
-  }
-}
-
 class LonganHtml : public EspLink::WebServerCallback
 {
 public:
@@ -129,7 +114,7 @@ int main()
   bool toggle = false ;
   while (true)
   {
-    heartbeat() ;
+    lcd.heartbeat() ;
     
     if (tSync()) // repeat every second
     {
@@ -155,7 +140,7 @@ int main()
   
   while (true)
   {
-    heartbeat() ;
+    lcd.heartbeat() ;
     
     if (tTime())
     {
