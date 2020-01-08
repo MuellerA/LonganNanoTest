@@ -1,0 +1,39 @@
+name: Test Build
+on: push
+
+jobs:
+  main:
+    name: Build using PlatformIO
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.x'
+      - name: Install Platform IO
+        run: |
+          python -m pip install --upgrade pip
+          pip install -U platformio
+      - name: Led
+        run: platformio run -d Led
+      - name: Led
+        run: platformio run -d Led
+      - name: Freq
+        run: platformio run -d Freq
+      - name: Usart
+        run: platformio run -d Usart
+      - name: Lcd
+        run: platformio run -d Lcd
+      - name: Dma
+        run: platformio run -d Dma
+      - name: UsartIrq
+        run: platformio run -d UsartIrq
+      - name: PA8
+        run: platformio run -d PA8
+      - name: EspLink
+        run: platformio run -d EspLink
+      - name: EspLinkWeb
+        run: platformio run -d EspLinkWeb
+      - name: I2c
+        run: platformio run -d I2c
