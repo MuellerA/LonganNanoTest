@@ -21,31 +21,21 @@ jobs:
         run: sed -i -e 179d ~/.platformio/packages/framework-gd32vf103-sdk/GD32VF103_standard_peripheral/gd32vf103.h
       - name: Led
         run: platformio run -d Led
-        continue-on-error: true
       - name: Freq
         run: platformio run -d Freq
-        continue-on-error: true
       - name: Usart
         run: platformio run -d Usart
-        continue-on-error: true
       - name: Lcd
         run: platformio run -d Lcd
-        continue-on-error: true
       - name: Dma
         run: platformio run -d Dma
-        continue-on-error: true
       - name: UsartIrq
         run: platformio run -d UsartIrq
-        continue-on-error: true
       - name: PA8
         run: platformio run -d PA8
-        continue-on-error: true
       - name: EspLink
         run: platformio run -d EspLink
-        continue-on-error: true
       - name: EspLinkWeb
         run: platformio run -d EspLinkWeb
-        continue-on-error: true
       - name: I2c
         run: platformio run -d I2c
-        continue-on-error: true

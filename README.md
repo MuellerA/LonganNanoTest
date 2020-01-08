@@ -51,7 +51,7 @@ board = sipeed-longan-nano
 framework = gd32vf103-sdk
 upload_protocol = dfu</pre>
 
-Longan Nano Lite needs the <a href="https://github.com/sipeed/platform-gd32v">development version of the GD32V platform</a> (2019-12).
+Longan Nano Lite needs version 1.1.1 of the GD32V platform.
 
 <h2>DFU Upload (Linux)</h2>
 <ol>
