@@ -16,12 +16,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -U platformio
       - name: Install GD32V
-        run: platformio platform install gd32v@1.1.1 --with-package framework-gd32vf103-sdk
+        run: platformio platform install gd32v@1.1.1 --with-package framework-gd32vf103-sdk --with-package tool-gd32vflash
       - name: Remove bool definition killing C++ from SDK 
         run: sed -i -e 179d ~/.platformio/packages/framework-gd32vf103-sdk/GD32VF103_standard_peripheral/gd32vf103.h
-      - name: Led
-        run: platformio run -d Led
-        continue-on-error: true
       - name: Led
         run: platformio run -d Led
         continue-on-error: true
