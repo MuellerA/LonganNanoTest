@@ -10,7 +10,8 @@
   <tr><th>PA8</th><td>Read GPIO PA8 which is connected to BOOT0 button</td></tr>
   <tr><th>EspLink</th><td>Connect Rx0/Tx0/Gnd/Rst to an ESP8266 running <a href="https://github.com/jeelabs/esp-link/releases/tag/v2.2.3">esp-link v2.2.3</a></td></tr>
   <tr><th>EspLinkWeb</th><td>Connect Rx0/Tx0/Gnd/Rst to an ESP8266 running <a href="https://github.com/jeelabs/esp-link/releases/tag/v3.2.47.alpha">esp-link v3.2.47</a> and update a User Defined Web Page (copy from html folder)</td></tr>
-  <tr><th>I2c</th><td>Connect a 3.3V 1602 LCD via PCF8574 (I2C-to-parallel) to port I2C0 (pins B6,B7) in master mode</hd></tr>
+  <tr><th>EspLinkSocket</th><td>Connect Rx0/Tx0/Gnd/Rst to an ESP8266 running <a href="https://github.com/jeelabs/esp-link/releases/tag/v3.2.47.alpha">esp-link v3.2.47</a> and start TCP server (telnet or netcat to esp-link port 5555 or 6666)</td></tr>
+  <tr><th>I2c</th><td>Connect a 3.3V 1602 LCD via PCF8574 (I2C-to-parallel) to port I2C0 (pins B6,B7) in master mode</td></tr>
 </table>
 
 <h1>Resources</h1>
@@ -51,7 +52,7 @@ board = sipeed-longan-nano
 framework = gd32vf103-sdk
 upload_protocol = dfu</pre>
 
-Longan Nano Lite needs version 1.1.1 of the GD32V platform.
+Longan Nano Lite needs version >= 1.1.1 of the GD32V platform.
 
 <h2>DFU Upload (Linux)</h2>
 <ol>
@@ -85,14 +86,22 @@ Longan Nano Lite needs version 1.1.1 of the GD32V platform.
   <tr><td colspan="99">[x] no available as header pin; 5VT (5 Volt Tolerant Input): * yes, - no</td></tr>
 </table>
 
-<h2>Troulbes with GD32V Platform</h2>
+<h2>Troubles with Longan Nano and GD32V 1.1.1 Platform</h2>
 <h3>Compile</h3>
-  <ul>
-    <li><pre>.../.platformio/packages/framework-gd32vf103-sdk/GD32VF103_standard_peripheral/gd32vf103.h:179:41: error: redeclaration of C++ built-in type 'bool' [-fpermissive]
+<ul>
+  <li><pre>.../.platformio/packages/framework-gd32vf103-sdk/GD32VF103_standard_peripheral/gd32vf103.h:179:41: error: redeclaration of C++ built-in type 'bool' [-fpermissive]
  179 | typedef enum {FALSE = 0, TRUE = !FALSE} bool;</pre>
-<p>put this line in comments</p>
-</li>
-<pre>Adding dfu suffix to firmware.bin
+    <p>Put this line in comments, then C++ will compile the SDK files.</p>
+  </li>
+  <li><pre>Adding dfu suffix to firmware.bin
 sh: 1: dfu-suffix: not found</pre>
-<p>dfu-utils get only installed when uploading with dfu. Build with target 'uplaod'.</p>
+    <p>dfu-utils get only installed when uploading with dfu. Build with target 'upload' once, then the program will be found.</p>
+  </li>
+</ul>
 <h3>Upload</h3>
+<ul>
+  <li>DFU on Linux: Longan Nano Lite working fine, Longan Nano no success.</li>
+  <li>JLink on Linux: Gives error message after upload, but after power cycling the Longan Nano the program is working (reset is not enough).</li>
+  <li>DFU on Windows: didn't get it working. Use <a href="https://longan.sipeed.com/en/get_started/blink.html#usb-dfu-download_1">GigaDevice Dfu Tool</a> instead.</li>
+  <li>JLink on Windows: didn't try yet.</li>
+</ul>
