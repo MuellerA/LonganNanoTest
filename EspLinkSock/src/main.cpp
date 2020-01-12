@@ -13,7 +13,7 @@ extern "C"
 #include "GD32VF103/usart.h"
 #include "Longan/lcd.h"
 #include "espLink.h"
-#include "elWebServer.h"
+#include "elSocket.h"
 
 using ::RV::GD32VF103::TickTimer ;
 using ::RV::GD32VF103::Usart ;
@@ -27,85 +27,73 @@ EspLink::Client espLink{usart} ;
 
 extern "C" int _put_char(int ch) // used by printf
 {
-  //static char hex[] = "0123456789ABCDEF" ;
-  //lcd.putChar(hex[(ch>>4) & 0x0f]) ;
-  //lcd.putChar(hex[(ch>>0) & 0x0f]) ;
-  //lcd.putChar(' ') ;
   lcd.put(ch) ;
   return ch ;
 }
 
-class LonganHtml : public EspLink::WebServerCallback
+class TcpServer : public EspLink::SocketCallback
 {
 public:
-  LonganHtml(const std::string ebbes)
-    : _ebbes{ebbes}, _status{false}
+  
+  TcpServer(uint16_t port)
+    : _elSocket{espLink}
+  {
+    _elSocket.setup("10.10.3.150", port, EspLink::SocketMode::TcpServer, this) ;
+  }
+  
+  virtual void sent(uint16_t len)
   {
   }
   
-  // WebsServerCallback
-  virtual void PageLoad(const EspLink::WebServer &server, const std::string &page)
+  virtual void recv(uint16_t len, uint8_t *data)
   {
-    setParameter(server) ;
+    _text.assign((char*)data, len) ;
   }
-  virtual void PageRefresh(const EspLink::WebServer &server, const std::string &page)
+  
+  virtual void error()
   {
-    setParameter(server) ;
-  }
-  virtual void ButtonPress(const EspLink::WebServer &server, const std::string &page)
-  {
-    std::string button ;
-    if (!server.getParameter(button))
-      return ;
-    if      (button == "an" ) _status = true ;
-    else if (button == "aus") _status = false ;
-    lcd.txtPos(1) ;
-    lcd.put(_status ? "an" : "aus") ;
-  }
-  virtual void FormSubmit(const EspLink::WebServer &server, const std::string &page)
-  {
-    std::string ebbes ;
-    if (!server.getParameter("ebbes", _ebbes))
-      _ebbes = "nix" ;
-    lcd.txtPos(2) ;
-    lcd.put(_ebbes.c_str()) ;
-  }
-  virtual void Close()
-  {
-    // nothing
   }
 
-  void setParameter(const EspLink::WebServer &server)
+  virtual void connect(bool conn)
   {
-    static uint32_t cnt ;
-    char buff[16] ;
-    server.sendParameter("p1", "Das ist ein schoener Text!") ;
-    sprintf(buff, "%lu", ++cnt) ;
-    server.sendParameter("zahl", buff) ;
-    server.sendParameter("ebbes", _ebbes) ;
-    server.sendParameter("status", _status ? "An" : "Aus") ;
+  }
+
+  void operator()()
+  {
+    if (_text.size())
+    {
+      for (char &c : _text)
+      {
+        if (('a' <= c) && (c <= 'z'))
+        {
+          c = (c <= 'm') ? c + 13 : c - 13 ;
+        }
+        else if (('A' <= c) && (c <= 'Z'))
+        {
+          c = (c <= 'M') ? c + 13 : c - 13 ;
+        }
+      }
+
+      _elSocket.send((uint8_t*)_text.data(), _text.size()) ;
+      _text.clear() ;
+    }
   }
 
 private:
-  std::string _ebbes ;
-  bool _status ;
+  EspLink::Socket _elSocket ;
+  std::string _text ;
+  
 } ;
-
 
 int main()
 {
-  EspLink::WebServer elWebServer{espLink} ;
-  LonganHtml longanHtml("was") ;
-  
   lcd.setup(font, 16, 8) ;
   usart.setup(115200UL) ;
 
-  lcd.put("Hallo ESP-LINK!") ;
+  lcd.put("ESP-LINK-SOCK") ;
   
   TickTimer tSync{1000, true} ;
   TickTimer tTime{1000, true} ;
-  
-  uint32_t cnt = 0 ;
 
   // sync with ESP
   lcd.txtPos(1) ;
@@ -134,8 +122,9 @@ int main()
   lcd.txtPos(1) ;
   lcd.put("          ") ;
 
-  elWebServer.addCallback("/longan.html.json", &longanHtml) ;
-  elWebServer.setup() ;
+  uint32_t cnt = 0 ;
+  TcpServer tcpServer5555(5555) ;
+  TcpServer tcpServer6666(6666) ;
   
   while (true)
   {
@@ -179,6 +168,9 @@ int main()
         fflush(stdout) ;
       }
     }
+
+    tcpServer5555() ;
+    tcpServer6666() ;
   }
 
 }

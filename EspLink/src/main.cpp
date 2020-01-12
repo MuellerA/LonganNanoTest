@@ -27,10 +27,6 @@ EspLink::Client espLink{usart} ;
 
 extern "C" int _put_char(int ch) // used by printf
 {
-  //static char hex[] = "0123456789ABCDEF" ;
-  //lcd.put(hex[(ch>>4) & 0x0f]) ;
-  //lcd.put(hex[(ch>>0) & 0x0f]) ;
-  //lcd.put(' ') ;
   lcd.put(ch) ;
   return ch ;
 }
@@ -40,8 +36,7 @@ int main()
   lcd.setup(font, 16, 8) ;
   usart.setup(115200UL) ;
 
-  printf("Hallo ESP-LINK!") ;
-  fflush(stdout) ;
+  lcd.put("Hallo ESP-LINK!") ;
   
   TickTimer tMsg{2000, true} ;
   TickTimer tStatus{1000, true} ;

@@ -37,5 +37,7 @@ jobs:
         run: platformio run -d EspLink
       - name: EspLinkWeb
         run: platformio run -d EspLinkWeb
+      - name: EspLinkSock
+        run: platformio run -d EspLinkSock
       - name: I2c
         run: platformio run -d I2c

@@ -84,3 +84,15 @@ Longan Nano Lite needs version 1.1.1 of the GD32V platform.
   <tr><td>A15</td><td>*</td><td></td>                   <td>B15/MOSI1</td><td>*</td><td>TF CARD SPI MOSI, 10k PullUp</td></tr>
   <tr><td colspan="99">[x] no available as header pin; 5VT (5 Volt Tolerant Input): * yes, - no</td></tr>
 </table>
+
+<h2>Troulbes with GD32V Platform</h2>
+<h3>Compile</h3>
+  <ul>
+    <li><pre>.../.platformio/packages/framework-gd32vf103-sdk/GD32VF103_standard_peripheral/gd32vf103.h:179:41: error: redeclaration of C++ built-in type 'bool' [-fpermissive]
+ 179 | typedef enum {FALSE = 0, TRUE = !FALSE} bool;</pre>
+<p>put this line in comments</p>
+</li>
+<pre>Adding dfu suffix to firmware.bin
+sh: 1: dfu-suffix: not found</pre>
+<p>dfu-utils get only installed when uploading with dfu. Build with target 'uplaod'.</p>
+<h3>Upload</h3>
