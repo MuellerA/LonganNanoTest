@@ -41,7 +41,7 @@ using ::RV::GD32VF103::Gpio ;
       _fontHeight = fontHeight ;
       _fontWidth = fontWidth ;
 
-      _spi.setup() ;
+      _spi.setup(Spi::Psc::_256) ;
       _pinRst.setup(Gpio::Mode::OUT_PP) ;
       _pinRs.setup(Gpio::Mode::OUT_PP) ;
       _pinCs.setup(Gpio::Mode::OUT_PP) ;

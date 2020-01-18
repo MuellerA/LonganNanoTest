@@ -16,7 +16,7 @@
 
 <h1>Resources</h1>
 
-<img src="https://longan.sipeed.com/assets/longan_nano_pin_map.png" alt="pin map" width="100%"/>
+<img src="https://github.com/kprasadvnsi/longan_nano_pinout/releases/download/v1.1.0/longan_nano_pinout_v1.1.0_w1419_h1000_small.png" alt="pin map" width="100%"/>
 
 <h2>Boards</h2>
 <p>
