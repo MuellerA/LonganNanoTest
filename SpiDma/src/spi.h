@@ -4,6 +4,8 @@
 
 #pragma once
 
+    #include <functional>
+
     class Spi
     {
     private:
@@ -30,6 +32,11 @@
       
       bool isTransmit() ;
 
+      void copy(std::function<void()> begin,
+                std::function<void()> end,
+                uint8_t *data, size_t size) ;
+      void copyEnd() ;
+      
       static Spi& spi0() ;
       static Spi& spi1() ;
       
@@ -41,6 +48,7 @@
       uint32_t _pinClk ;
       uint32_t _pinMiso ;
       uint32_t _pinMosi ;
+      std::function<void()> _copyEnd ;
     } ;
 
 ////////////////////////////////////////////////////////////////////////////////

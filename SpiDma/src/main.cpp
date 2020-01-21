@@ -25,7 +25,8 @@ extern "C" int _put_char(int ch) // used by printf
 
 struct Frame
 {
-  uint16_t _pixel[80][80] ;
+  volatile bool _busy{false} ;
+  uint16_t      _pixel[80][80] ;
 } ;
 
 class Fixed
@@ -35,7 +36,7 @@ class Fixed
   // 24bit frac
   static const int FRAC = 24 ;
   using FixedType = int32_t ;
-  
+
 public:
   explicit Fixed(int32_t v, int32_t div=1) ;
   Fixed() ;
@@ -92,8 +93,7 @@ bool Fixed::operator>(const Fixed &that) const
 
 
 Frame frame1 ;
-//Frame frame2 ;
-Frame *frame = &frame1 ;
+Frame frame2 ;
 
 const Fixed    MaxValue{4} ;
 
@@ -125,14 +125,18 @@ uint16_t col(uint32_t iter, uint32_t maxIter)
 
   uint16_t c = (iter % 0b111111) + 1 ;
   return
-    ((c & 0b110000) << 10) |
-    ((c & 0b001100) <<  7) |
-    ((c & 0b000011) <<  3) ;
+    ((c & 0b110000) <<  3) |
+    ((c & 0b001100) >>  1) |
+    ((c & 0b000011) << 11) ;
+    //((c & 0b110000) << 10) |
+    //((c & 0b001100) <<  7) |
+    //((c & 0b000011) <<  3) ;
 }
 
 
 void apfel(Fixed reMin, Fixed reMax, Fixed imMin, Fixed imMax,
-           uint32_t xCnt, uint32_t yCnt, uint32_t maxIter)
+           uint32_t xCnt, uint32_t yCnt, uint32_t maxIter,
+           Frame &frame)
 {
   Fixed reStep = (reMax - reMin) / xCnt ;
   Fixed imStep = (imMax - imMin) / yCnt ;
@@ -147,14 +151,14 @@ void apfel(Fixed reMin, Fixed reMax, Fixed imMin, Fixed imMax,
 
       uint32_t iter = iterate(re, im, maxIter) ;
 
-      frame1._pixel[y][x] = col(iter, maxIter) ;
+      frame._pixel[y][x] = col(iter, maxIter) ;
     }
   }
 }
 
-bool checkPixel(bool pixel0, int32_t i, int32_t j, uint32_t &x, uint32_t &y, Frame *frame)
+bool checkPixel(bool pixel0, int32_t i, int32_t j, uint32_t &x, uint32_t &y, Frame &frame)
 {
-  bool pixel = frame->_pixel[j][i] != 0 ;
+  bool pixel = frame._pixel[j][i] != 0 ;
   if (pixel == pixel0)
     return false ;
 
@@ -164,9 +168,9 @@ bool checkPixel(bool pixel0, int32_t i, int32_t j, uint32_t &x, uint32_t &y, Fra
   return true ;
 }
 
-bool calcNextPoint(uint32_t &xU, uint32_t &yU, Frame *frame)
+bool calcNextPoint(uint32_t &xU, uint32_t &yU, Frame &frame)
 {
-  bool pixel = frame->_pixel[yU][xU] != 0 ;
+  bool pixel = frame._pixel[yU][xU] != 0 ;
 
   int32_t i, j ;
   int32_t x = (int32_t)xU ;
@@ -223,12 +227,19 @@ int main()
   lcd.setup(font, 16, 8) ;
 
   lcd.put("Spi Dma") ;
+
+  lcd.txtPos(1) ; lcd.put("calc") ;
+  lcd.txtPos(2) ; lcd.put("copy") ;
+  lcd.txtPos(3) ; lcd.put("tot ") ;
+  lcd.txtPos(4) ; lcd.put("loop") ;
   
   Fixed dd{9, 10} ;
 
-  TickTimer t(300, true) ;
-  bool first = true ;
+  //TickTimer t(300, true) ;
+  //bool first = true ;
 
+  Frame *frame{&frame1} ;
+  
   while (true)
   {
     Fixed re{-5, 10} ;
@@ -239,27 +250,43 @@ int main()
     uint32_t xy = TickTimer::now() % (80 * 80) ; // ultimate random generator
     x = xy / 80 ;
     y = xy % 80 ;
+
+    TickTimer tt(0) ;
+    uint32_t tDCalc{0} ;
+    uint32_t tDCopy{0} ;
+
+    // NO OUTPUT TO LCD WHILE frame->_busy (== SPI DMA still active)
     
     for (cnt = 0 ; cnt < 48 ; ++cnt)
     {
-      uint64_t t0 = TickTimer::now() ;
-      apfel(re - d, re + d, im - d, im + d, 80, 80, 320) ;
-      uint64_t t1 = TickTimer::now() ;
-
-      if (!calcNextPoint(x, y, &frame1))
+      uint64_t tCalc0 = TickTimer::now() ;
+      apfel(re - d, re + d, im - d, im + d, 80, 80, 320, *frame) ;
+      uint64_t tCalc1 = TickTimer::now() ;
+      tDCalc = TickTimer::tickToMs(tCalc1 - tCalc0) ;
+      
+      if (!calcNextPoint(x, y, *frame))
         break ;
 
-      while (!first && !t()) ;
-      first = false ;
+      //while (!first && !t()) ;
+      //first = false ;
 
-      uint64_t t2 = TickTimer::now() ;
-      lcd.copy(80, 159, 0, 79, &frame1._pixel[0][0]) ;
-      uint64_t t3 = TickTimer::now() ;
+      Frame *frameOut = frame ;
+      frame = (frame == &frame1) ? &frame2 : &frame1 ;
+      while (frame->_busy) ;
 
-      lcd.txtPos(2) ; printf("%5lu", TickTimer::tickToMs(t1-t0)) ; fflush(stdout) ;
-      lcd.txtPos(3) ; printf("%5lu", TickTimer::tickToMs(t3-t2)) ; fflush(stdout) ;
-      lcd.txtPos(4) ; printf("%5lu", cnt                       ) ; fflush(stdout) ;
-
+      uint32_t elapsedMs = tt.elapsedMs() ;
+      TickTimer::delayMs(5) ;
+      lcd.txtPos(1, 4) ; printf("%5lu", tDCalc   ) ; fflush(stdout) ;
+      lcd.txtPos(2, 4) ; printf("%5lu", tDCopy   ) ; fflush(stdout) ;
+      lcd.txtPos(3, 4) ; printf("%5lu", elapsedMs) ; fflush(stdout) ;
+      lcd.txtPos(4, 4) ; printf("%5lu", cnt      ) ; fflush(stdout) ;
+      tt.restart() ;
+      
+      uint64_t tCopy0 = TickTimer::now() ;
+      lcd.copy(80, 159, 0, 79, &(frameOut->_pixel[0][0]), &(frameOut->_busy)) ;
+      uint64_t tCopy1 = TickTimer::now() ;
+      tDCopy = TickTimer::tickToMs(tCopy1 - tCopy0) ;
+      
       re = re - d + (d*2 * x / 80) ;
       im = im - d + (d*2 * y / 80) ;
       d = d * dd ;

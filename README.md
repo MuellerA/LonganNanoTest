@@ -12,7 +12,12 @@
   <tr><th>EspLinkWeb</th><td>Connect Rx0/Tx0/Gnd/Rst to an ESP8266 running <a href="https://github.com/jeelabs/esp-link/releases/tag/v3.2.47.alpha">esp-link v3.2.47</a> and update a User Defined Web Page (copy from html folder)</td></tr>
   <tr><th>EspLinkSocket</th><td>Connect Rx0/Tx0/Gnd/Rst to an ESP8266 running <a href="https://github.com/jeelabs/esp-link/releases/tag/v3.2.47.alpha">esp-link v3.2.47</a> and start TCP server (telnet or netcat to esp-link port 5555 or 6666)</td></tr>
   <tr><th>I2c</th><td>Connect a 3.3V 1602 LCD via PCF8574 (I2C-to-parallel) to port I2C0 (pins B6,B7) in master mode</td></tr>
+  <tr><th>SpiDma</th><td>Evaluate SPI with and without DMA with and without IRQ</td></tr> 
 </table>
+
+<h1>License</h1>
+
+<p>My code uses the <a href="LICENSE">MIT License</a>. The repository contains code from other sources, for their license conditions check the files in the lib/ folders.</p>
 
 <h1>Resources</h1>
 
@@ -33,8 +38,8 @@
   <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/222/path_type/1">GD32VF103 User Manual 1.2</a></td></tr>
   <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/221/path_type/1">GD32VF103 Datasheet 1.1</a></td></tr>
   <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/228/path_type/1">GD32VF103 Firmware Library User Guide 1.0</a></td></tr>
-  <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/227/path_type/1">GD32VF103 Demo Suites 1.0.2 (.rar)</a></td></tr>
-  <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/223/path_type/1">GD32VF103 Firmware Library 1.0.1 (.rar)</a></td></tr>
+  <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/227/path_type/1">GD32VF103 Demo Suites 1.0.3 (.rar)</a></td></tr>
+  <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/223/path_type/1">GD32VF103 Firmware Library 1.0.2 (.rar)</a></td></tr>
   <tr><td><a href="https://content.riscv.org/wp-content/uploads/2019/06/riscv-spec.pdf">The RISC-V Instruction Set Manual Volume I: Unprivileged ISA</a></td></tr>
 </table>
 

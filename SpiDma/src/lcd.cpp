@@ -115,7 +115,7 @@ using ::RV::GD32VF103::Gpio ;
       csHi() ;
     }
 
-    void Lcd::copy(uint8_t x1, uint8_t x2, uint8_t y1, uint8_t y2, const uint16_t *rgb)
+    void Lcd::copy(uint8_t x1, uint8_t x2, uint8_t y1, uint8_t y2, const uint16_t *rgb, volatile bool *busy)
     {
       // Column Address Set
       cmd({0x2a, 4, { 0x00, (uint8_t)( 1+x1), 0x00, (uint8_t)( 1+x2) } }) ; // x-offset  1
@@ -123,21 +123,19 @@ using ::RV::GD32VF103::Gpio ;
       cmd({0x2b, 4, { 0x00, (uint8_t)(26+y1), 0x00, (uint8_t)(26+y2) } }) ; // y-offset 26
       // Memory Write
       cmd(0x2c) ;
-  
-      csLo() ;
-      rsHi() ;
-      
-      for (uint32_t j = y1 ; j <= y2 ; ++j)
-      {
-        for (uint32_t i = x1 ; i <= x2 ; ++i)
-        {
-          _spi.put(*rgb >>  8) ;
-          _spi.put(*rgb >>  0) ;
-          rgb++ ;
-        }
-      }
-      while (_spi.isTransmit()) ;
-      csHi() ;
+
+      _spi.copy([busy, this]()
+                {
+                  *busy = true ;
+                  csLo() ;
+                  rsHi() ;
+                },
+                [busy, this]()
+                {
+                  csHi() ;
+                  *busy = false ;
+                },
+                (uint8_t*)rgb, (y2-y1+1)*(x2-x1+1)*2) ;
     }
 
     void Lcd::put(char ch)

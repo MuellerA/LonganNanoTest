@@ -25,7 +25,7 @@
       
       void setup(const uint8_t *font, uint8_t fontHeight, uint8_t fontWidth) ;
       void fill(uint8_t xMin, uint8_t xMax, uint8_t yMin, uint8_t yMax, uint16_t rgb = 0x0000) ;
-      void copy(uint8_t x1, uint8_t x2, uint8_t y1, uint8_t y2, const uint16_t *rgb) ;
+      void copy(uint8_t x1, uint8_t x2, uint8_t y1, uint8_t y2, const uint16_t *rgb, volatile bool *busy) ;
       void put(char ch) ;
       void put(const char *str) ;
       void txtArea(uint8_t xMin, uint8_t xMax, uint8_t yMin, uint8_t yMax) ;
