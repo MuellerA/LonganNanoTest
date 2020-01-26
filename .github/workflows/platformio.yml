@@ -41,5 +41,5 @@ jobs:
         run: platformio run -d EspLinkSock
       - name: I2c
         run: platformio run -d I2c
-      - name: I2c
+      - name: SpiDma
         run: platformio run -d SpiDma

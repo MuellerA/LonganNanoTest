@@ -7,8 +7,6 @@ extern "C"
 #include "gd32vf103.h"
 }
 
-#include <stdio.h>
-
 #include "GD32VF103/time.h"
 #include "GD32VF103/usart.h"
 #include "Longan/lcd.h"
@@ -24,12 +22,6 @@ extern "C" const uint8_t font[1520] ;
 Usart &usart{Usart::usart0()} ;
 Lcd &lcd{Lcd::lcd()} ;
 EspLink::Client espLink{usart} ;
-
-extern "C" int _put_char(int ch) // used by printf
-{
-  lcd.put(ch) ;
-  return ch ;
-}
 
 class TcpServer : public EspLink::SocketCallback
 {
@@ -91,7 +83,7 @@ int main()
   usart.setup(115200UL) ;
 
   lcd.put("ESP-LINK-SOCK") ;
-  
+
   TickTimer tSync{1000, true} ;
   TickTimer tTime{1000, true} ;
 
@@ -143,29 +135,43 @@ int main()
       uint32_t m = time / 60 ;
       time %= 60 ;
       uint32_t s = time / 1 ;
-      printf(" %02ld:%02ld:%02ld ", h,m,s) ;
-      fflush(stdout) ;
+      lcd.put(h, 2, '0') ;
+      lcd.put(':') ;
+      lcd.put(m, 2, '0') ;
+      lcd.put(':') ;
+      lcd.put(s, 2, '0') ;
       lcd.txtBg(0x000000) ;
       lcd.txtFg(0xffffff) ;
     }
     
-    if (espLink.poll() && false)
+    if (espLink.poll())
     {
       const EspLink::Pdu &rxPdu = espLink.rxPdu() ;
       
       lcd.txtPos(1) ;
-      printf("%04lu: %2u %2lx %2u  ", ++cnt, rxPdu._cmd, rxPdu._ctx, rxPdu._argc) ;
-      fflush(stdout) ;
+      lcd.put(++cnt, 4) ;
+      lcd.put(':') ;
+      lcd.put(' ') ;
+      lcd.put(rxPdu._cmd, 2) ;
+      lcd.put(' ') ;
+      lcd.put(rxPdu._ctx, 4, '0', true) ;
+      lcd.put(' ') ;
+      lcd.put(rxPdu._argc, 2) ;
       for (uint32_t i = 0 ; (i < rxPdu._argc) && (i < 2) ; ++i)
       {
         uint32_t  len = rxPdu._param[i]._len ;
         uint8_t *data = rxPdu._param[i]._data ;
         
         lcd.txtPos(i+2) ;
-        printf("[%lu] %2lu", i, len) ;
+        lcd.put('[') ;
+        lcd.put(i) ;
+        lcd.put(']') ; lcd.put(' ') ;
+        lcd.put(len, 2) ;
         for (uint32_t j = 0 ; (j < len) && (j < 4) ; ++j)
-          printf(" %02x", data[j]) ;
-        fflush(stdout) ;
+        {
+          lcd.put(' ') ;
+          lcd.put(data[j], 2, '0', true) ;
+        }
       }
     }
 
