@@ -6,86 +6,63 @@ extern "C"
 {
 #include "gd32vf103.h"
 }
-#include <stdio.h>
 
-#include "delay.h"
-#include "spi.h"
-#include "lcd.h"
+#include "GD32VF103/time.h"
+#include "Longan/lcd.h"
+#include "Longan/fonts.h"
 
-extern "C" const uint8_t font[1520] ;
+using ::RV::GD32VF103::TickTimer ;
+using ::RV::Longan::Lcd ;
+using ::RV::Longan::LcdArea ;
 
-Spi0 spi ;
-Lcd lcd{spi, font, 16, 8} ;
-
+Lcd& lcd{Lcd::lcd()} ;
 
 volatile uint8_t  * const CrcBase = (uint8_t*) 0x40023000 ;
 volatile uint32_t * const CrcData = (uint32_t*)(CrcBase + 0x00) ;
 volatile uint32_t * const CrcCtl  = (uint32_t*)(CrcBase + 0x08) ;
 
-extern "C" int _put_char(int ch) // used by printf
-{
-  lcd.putChar(ch) ;
-  return ch ;
-}
-
-inline uint32_t toUs(uint64_t t)
-{
-  return t * 4 / (SystemCoreClock/1000000) ;
-}
-
 int main()
 {
-  spi.setup() ;
   lcd.setup() ;
 
+  LcdArea lcdTitle{lcd,  0, 140,  0, 16, &Roboto_Bold7pt7b, 0xffffffUL, 0x4040ffUL} ;
+  LcdArea lcdLabel{lcd,  0,  40, 16, 64} ;
+  LcdArea lcdData {lcd, 40, 120, 16, 64} ;
+  
   const uint32_t DataSize = 4096 ;
   uint32_t data[DataSize] ;
   uint32_t crcMan ;
   uint32_t crcDma ;
   uint64_t t ;
-  uint32_t us ; // micro sec
+  uint32_t usLoop ; // micro sec
+  uint32_t usDma ;
   uint32_t i ;
 
-  { // check time calculation is correct
-    t = get_timer_value() ;
-    delayMs() ;
-    us = toUs(get_timer_value() - t);
-
-    if (us != 1000)
-    {
-      printf("time base error, expected 1000 got %lu", us) ;
-      fflush(stdout) ;
-      while (true) ;
-    }
-  }
+  lcdTitle.put("  CRC/DMA Test  ") ;
+  lcdLabel.put("N:\nLoop:\nDMA:\nCRC:") ;
   
   while (true)
   {
     for (uint32_t size = 256 ; size <= DataSize ; size *= 2)
     {
-      lcd.putChar(12) ;
-      printf("CRC Test - %lu\n", size) ;
-
       rcu_periph_clock_enable(RCU_CRC);
       rcu_periph_clock_enable(RCU_DMA0);
 
       for (i = 0 ; i < size ; ++i)
         data[i] = i ;
-
  
       { // for loop
         *CrcCtl = 0x00000001 ;
   
-        t = get_timer_value() ;
+        t = TickTimer::now() ;
 
         for (i = 0 ; i < size ; ++i)
           *CrcData = data[i] ;
 
         crcMan = *CrcData ;
   
-        us = toUs(get_timer_value() - t);
+        usLoop = TickTimer::tickToUs(TickTimer::now() - t);
       }
-      printf("Loop: %luus\n", us) ;
 
       { // dma
         dma_parameter_struct dmaInit ;
@@ -113,16 +90,20 @@ int main()
         while (dma_transfer_number_get(DMA0, DMA_CH1)) ;
         crcDma = *CrcData ;
 
-        us = toUs(get_timer_value() - t);
+        usDma = TickTimer::tickToUs(TickTimer::now() - t);
       }
-      printf("DMA:  %luus\n", us) ;
 
+      lcdData.clear() ;
+      lcdData.txtPos(0) ; lcdData.put(size) ;
+      lcdData.txtPos(1) ; lcdData.put(usLoop) ; lcdData.put("us") ;
+      lcdData.txtPos(2) ; lcdData.put(usDma) ; lcdData.put("us") ;
+      lcdData.txtPos(3) ;
       if (crcMan == crcDma)
-        printf("CRC:  %lu", crcDma) ;
+        lcdData.put(crcDma) ;
       else
-        printf("CRC error - Man != DMA") ;
-      fflush(stdout) ;
-      delayMs(2000) ;
+        lcdData.put("error - Man != DMA") ;
+
+      TickTimer::delayMs(2000) ;
     }
   }
 }

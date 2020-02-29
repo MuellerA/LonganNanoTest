@@ -17,8 +17,6 @@ using ::RV::Longan::LcdArea ;
 
 #include "usart.h"
 
-extern "C" const uint8_t font[1520] ;
-
 Lcd& lcd{Lcd::lcd()} ;
 Usart0 usart ;
 
