@@ -15,8 +15,6 @@ extern "C"
 using ::RV::GD32VF103::TickTimer ;
 using ::RV::Longan::Lcd ;
 
-extern "C" const uint8_t font[1520] ;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 const static uint8_t I2Caddr_PCF8574  = 0x27 ;
@@ -32,7 +30,7 @@ Lcd1602I2c &lcd1602{Lcd1602I2c::lcd1602I2c(i2c)} ;
 int main()
 {
   i2c.setup(42, 400000U) ;
-  lcd.setup(font, 16, 8) ;
+  lcd.setup() ;
   lcd1602.setup(I2Caddr_LCD) ;
 
   lcd.put("Hallo I2C!") ;

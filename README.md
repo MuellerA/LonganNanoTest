@@ -105,7 +105,7 @@ sh: 1: dfu-suffix: not found</pre>
 </ul>
 <h3>Upload</h3>
 <ul>
-  <li>DFU on Linux: Longan Nano Lite working fine, Longan Nano no success.</li>
+  <li>DFU on Linux: Longan Nano Lite working fine. Longan Nano only after download & compile of <a href="https://sourceforge.net/p/dfu-util/dfu-util/ci/master/tree/">latest dfu-util</a>.</li>
   <li>JLink on Linux: Gives error message after upload, but after power cycling the Longan Nano the program is working (reset is not enough).</li>
   <li>DFU on Windows: didn't get it working. Use <a href="https://longan.sipeed.com/en/get_started/blink.html#usb-dfu-download_1">GigaDevice Dfu Tool</a> instead.</li>
   <li>JLink on Windows: didn't try yet.</li>

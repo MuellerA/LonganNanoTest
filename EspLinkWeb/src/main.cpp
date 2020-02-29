@@ -11,14 +11,14 @@ extern "C"
 #include "GD32VF103/usart.h"
 #include "Longan/toStr.h"
 #include "Longan/lcd.h"
+#include "Longan/fonts.h"
 #include "espLink.h"
 #include "elWebServer.h"
 
 using ::RV::GD32VF103::TickTimer ;
 using ::RV::GD32VF103::Usart ;
 using ::RV::Longan::Lcd ;
-
-extern "C" const uint8_t font[1520] ;
+using ::RV::Longan::LcdArea ;
 
 Usart &usart{Usart::usart0()} ;
 Lcd &lcd{Lcd::lcd()} ;
@@ -28,7 +28,9 @@ class LonganHtml : public EspLink::WebServerCallback
 {
 public:
   LonganHtml(const std::string ebbes)
-    : _ebbes{ebbes}, _status{false}
+    : _ebbes{ebbes}, _status{false},
+      _lcdButton{lcd, 0, 160, 20, 16},
+      _lcdEbbes {lcd, 0, 160, 40, 16}
   {
   }
   
@@ -48,16 +50,16 @@ public:
       return ;
     if      (button == "an" ) _status = true ;
     else if (button == "aus") _status = false ;
-    lcd.txtPos(1) ;
-    lcd.put(_status ? "an" : "aus") ;
+    _lcdButton.clear() ;
+    _lcdButton.put(_status ? "an" : "aus") ;
   }
   virtual void FormSubmit(const EspLink::WebServer &server, const std::string &page)
   {
     std::string ebbes ;
     if (!server.getParameter("ebbes", _ebbes))
       _ebbes = "nix" ;
-    lcd.txtPos(2) ;
-    lcd.put(_ebbes.c_str()) ;
+    _lcdEbbes.clear() ;
+    _lcdEbbes.put(_ebbes.c_str()) ;
   }
   virtual void Close()
   {
@@ -79,6 +81,8 @@ public:
 private:
   std::string _ebbes ;
   bool _status ;
+  LcdArea _lcdButton ;
+  LcdArea _lcdEbbes ;
 } ;
 
 
@@ -87,19 +91,20 @@ int main()
   EspLink::WebServer elWebServer{espLink} ;
   LonganHtml longanHtml("was") ;
   
-  lcd.setup(font, 16, 8) ;
+  lcd.setup() ;
   usart.setup(115200UL) ;
 
-  lcd.put("Hallo ESP-LINK!") ;
+  LcdArea lcdTitle{lcd, 0, 140,  0, 16, &Roboto_Bold7pt7b,      0xffffffUL, 0x4040ffUL} ;
+  LcdArea lcdCmd  {lcd, 0, 140, 16, 48, &RobotoMono_Light6pt7b                        } ;
+  LcdArea lcdClock{lcd, 0, 8*7, 64, 16, &RobotoMono_Light6pt7b, 0x000000UL, 0xff0000UL} ;
+  
+  lcdTitle.put("Hallo ESP-LINK!") ;
   
   TickTimer tSync{1000, true} ;
   TickTimer tTime{1000, true} ;
   
-  uint32_t cnt = 0 ;
-
   // sync with ESP
-  lcd.txtPos(1) ;
-  lcd.put("Syncing * ") ;
+  lcdCmd.put("Syncing * ") ;
   bool toggle = false ;
   while (true)
   {
@@ -108,8 +113,8 @@ int main()
     if (tSync()) // repeat every second
     {
       espLink.sync() ;
-      lcd.txtPos(1, 8) ;
-      lcd.put(toggle ? "* " : " *") ;
+      lcdCmd.txtPos(0, 8) ;
+      lcdCmd.put(toggle ? "* " : " *") ;
       toggle = !toggle ;
     }
     if (espLink.poll())
@@ -121,8 +126,7 @@ int main()
         break ;
     }
   }
-  lcd.txtPos(1) ;
-  lcd.put("          ") ;
+  lcdCmd.clear() ;
 
   elWebServer.addCallback("/longan.html.json", &longanHtml) ;
   elWebServer.setup() ;
@@ -135,54 +139,21 @@ int main()
     {
       uint32_t time ;
       espLink.unixTime(time) ;
-      lcd.txtPos(4) ;
-      lcd.txtBg(0xff0000) ;
-      lcd.txtFg(0x000000) ;
+      lcdClock.clear() ;
       time %= 24*60*60 ;
       uint32_t h = time / (60*60) ;
       time %= 60*60 ;
       uint32_t m = time / 60 ;
       time %= 60 ;
       uint32_t s = time / 1 ;
-      lcd.put(h, 2, '0') ;
-      lcd.put(':') ;
-      lcd.put(m, 2, '0') ;
-      lcd.put(':') ;
-      lcd.put(s, 2, '0') ;
-      lcd.txtBg(0x000000) ;
-      lcd.txtFg(0xffffff) ;
+      lcdClock.put(h, 2, '0') ;
+      lcdClock.put(':') ;
+      lcdClock.put(m, 2, '0') ;
+      lcdClock.put(':') ;
+      lcdClock.put(s, 2, '0') ;
     }
     
-    if (espLink.poll() && false)
-    {
-      const EspLink::Pdu &rxPdu = espLink.rxPdu() ;
-      
-      lcd.txtPos(1) ;
-      lcd.put(++cnt, 4) ;
-      lcd.put(':') ;
-      lcd.put(' ') ;
-      lcd.put(rxPdu._cmd, 2) ;
-      lcd.put(' ') ;
-      lcd.put(rxPdu._ctx, 4, '0', true) ;
-      lcd.put(' ') ;
-      lcd.put(rxPdu._argc, 2) ;
-      for (uint32_t i = 0 ; (i < rxPdu._argc) && (i < 2) ; ++i)
-      {
-        uint32_t  len = rxPdu._param[i]._len ;
-        uint8_t *data = rxPdu._param[i]._data ;
-        
-        lcd.txtPos(i+2) ;
-        lcd.put('[') ;
-        lcd.put(i) ;
-        lcd.put(']') ; lcd.put(' ') ;
-        lcd.put(len, 2) ;
-        for (uint32_t j = 0 ; (j < len) && (j < 4) ; ++j)
-        {
-          lcd.put(' ') ;
-          lcd.put(data[j], 2, '0', true) ;
-        }
-      }
-    }
+    espLink.poll() ;
   }
 
 }
