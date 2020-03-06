@@ -12,7 +12,8 @@
   <tr><th>EspLinkWeb</th><td>Connect Rx0/Tx0/Gnd/Rst to an ESP8266 running <a href="https://github.com/jeelabs/esp-link/releases/tag/v3.2.47.alpha">esp-link v3.2.47</a> and update a User Defined Web Page (copy from html folder)</td></tr>
   <tr><th>EspLinkSocket</th><td>Connect Rx0/Tx0/Gnd/Rst to an ESP8266 running <a href="https://github.com/jeelabs/esp-link/releases/tag/v3.2.47.alpha">esp-link v3.2.47</a> and start TCP server (telnet or netcat to esp-link port 5555 or 6666)</td></tr>
   <tr><th>I2c</th><td>Connect a 3.3V 1602 LCD via PCF8574 (I2C-to-parallel) to port I2C0 (pins B6,B7) in master mode</td></tr>
-  <tr><th>SpiDma</th><td>Evaluate SPI with and without DMA with and without IRQ</td></tr> 
+  <tr><th>SpiDma</th><td>Evaluate SPI with and without DMA with and without IRQ</td></tr>
+  <tr><th>GpioIrq</th><td>Display BOOT0 button status on LED via Irq Handler</td></tr>
 </table>
 
 <h1>License</h1>

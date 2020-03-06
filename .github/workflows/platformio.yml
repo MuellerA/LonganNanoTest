@@ -43,3 +43,5 @@ jobs:
         run: platformio run -d I2c
       - name: SpiDma
         run: platformio run -d SpiDma
+      - name: GpioIrq
+        run: platformio run -d GpioIrq
