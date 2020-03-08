@@ -14,6 +14,7 @@
   <tr><th>I2c</th><td>Connect a 3.3V 1602 LCD via PCF8574 (I2C-to-parallel) to port I2C0 (pins B6,B7) in master mode</td></tr>
   <tr><th>SpiDma</th><td>Evaluate SPI with and without DMA with and without IRQ</td></tr>
   <tr><th>GpioIrq</th><td>Display BOOT0 button status on LED via Irq Handler</td></tr>
+  <tr><th>LcdFonts</th><td>Show test string in various fonts on LCD</td></tr>
 </table>
 
 <h1>License</h1>
