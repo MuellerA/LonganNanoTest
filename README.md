@@ -8,7 +8,7 @@
   <tr><th>Dma</th><td>DMA mem to CRC register</td></tr>
   <tr><th>UsartIrq</th><td>USART0 (115200,8N1), Echo serial input to serial output and LCD with 10 character per second, using 1k buffer</td></tr>
   <tr><th>PA8</th><td>Read GPIO PA8 which is connected to BOOT0 button</td></tr>
-  <tr><th>EspLink</th><td>Connect Rx0/Tx0/Gnd/Rst to an ESP8266 running <a href="https://github.com/jeelabs/esp-link/releases/tag/v2.2.3">esp-link v2.2.3</a></td></tr>
+  <tr><th>EspLink</th><td>Connect Rx0/Tx0/Gnd/Rst to an ESP8266 running <a href="https://github.com/jeelabs/esp-link/releases/tag/v3.2.47.alpha">esp-link v3.2.47</a></td></tr>
   <tr><th>EspLinkWeb</th><td>Connect Rx0/Tx0/Gnd/Rst to an ESP8266 running <a href="https://github.com/jeelabs/esp-link/releases/tag/v3.2.47.alpha">esp-link v3.2.47</a> and update a User Defined Web Page (copy from html folder)</td></tr>
   <tr><th>EspLinkSocket</th><td>Connect Rx0/Tx0/Gnd/Rst to an ESP8266 running <a href="https://github.com/jeelabs/esp-link/releases/tag/v3.2.47.alpha">esp-link v3.2.47</a> and start TCP server (telnet or netcat to esp-link port 5555 or 6666)</td></tr>
   <tr><th>I2c</th><td>Connect a 3.3V 1602 LCD via PCF8574 (I2C-to-parallel) to port I2C0 (pins B6,B7) in master mode</td></tr>
@@ -36,7 +36,7 @@
 
 <h2>Documentation, Examples, etc</h2>
 <table>
-  <tr><td>Sipeed Longan Nano <a href="http://dl.sipeed.com/LONGAN/Nano/">Specs Tools</a> <a href="https://longan.sipeed.com/en/">Wiki</a> <a href="https://bbs.sipeed.com/c/14-category">BBS</a></td></tr>
+  <tr><td>Sipeed Longan Nano <a href="http://dl.sipeed.com/LONGAN/Nano/">Specs Tools</a> <a href="https://longan.sipeed.com/en/">Wiki</a> <a href="https://en.bbs.sipeed.com/c/14-category/">BBS</a></td></tr>
   <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/222/path_type/1">GD32VF103 User Manual 1.2</a></td></tr>
   <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/221/path_type/1">GD32VF103 Datasheet 1.1</a></td></tr>
   <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/228/path_type/1">GD32VF103 Firmware Library User Guide 1.0</a></td></tr>
@@ -90,7 +90,7 @@ Longan Nano Lite needs version >= 1.1.1 of the GD32V platform.
   <tr><td>A13</td><td>*</td><td></td>                   <td>B13/SCK1</td><td>*</td><td>TF CARD SPI Clk</td>              <td>C14/OSC32IN</td><td>-</td><td>32kHz Clk</td></tr>
   <tr><td>A14</td><td>*</td><td></td>                   <td>B14/MISO1</td><td>*</td><td>TF CARD SPI MISO, 10k PullUp</td><td>C15/OSC32OUT</td><td>-</td><td>32kHz Clk</td></tr>
   <tr><td>A15</td><td>*</td><td></td>                   <td>B15/MOSI1</td><td>*</td><td>TF CARD SPI MOSI, 10k PullUp</td></tr>
-  <tr><td colspan="99">[x] no available as header pin; 5VT (5 Volt Tolerant Input): * yes, - no</td></tr>
+  <tr><td colspan="99">[x] not available as header pin; 5VT (5 Volt Tolerant Input): * yes, - no</td></tr>
 </table>
 
 <h2>Troubles with Longan Nano and GD32V 1.1.1 Platform</h2>

@@ -11,7 +11,8 @@ extern "C"
 #include "GD32VF103/usart.h"
 #include "Longan/lcd.h"
 #include "Longan/fonts.h"
-#include "espLink.h"
+#include "Longan/toStr.h"
+#include "EspLink/client.h"
 
 using ::RV::GD32VF103::TickTimer ;
 using ::RV::GD32VF103::Usart ;
@@ -20,107 +21,168 @@ using ::RV::Longan::LcdArea ;
 
 Lcd& lcd{Lcd::lcd()} ;
 Usart &usart{Usart::usart0()} ; ;
-EspLink::Client espLink{usart} ;
+::RV::EspLink::Client espLink{usart} ;
+
+std::string toIp(uint8_t val[4])
+{
+  char buff[10] ;
+  char *b ;
+  std::string ip ;
+  b = ::RV::toStr(val[3], buff, 3) ; ip.append(b, buff+3-b) ;
+  ip.push_back('.') ;
+  b = ::RV::toStr(val[2], buff, 3) ; ip.append(b, buff+3-b) ;
+  ip.push_back('.') ;
+  b = ::RV::toStr(val[1], buff, 3) ; ip.append(b, buff+3-b) ;
+  ip.push_back('.') ;
+  b = ::RV::toStr(val[0], buff, 3) ; ip.append(b, buff+3-b) ;
+  return ip ;
+}
+
+std::string toMac(uint8_t val[6])
+{
+  char buff[10] ;
+  std::string mac ;
+  mac.append(::RV::toStr(val[0], buff, 2, '0', true), 2) ;
+  mac.push_back(':') ;
+  mac.append(::RV::toStr(val[1], buff, 2, '0', true), 2) ;
+  mac.push_back(':') ;
+  mac.append(::RV::toStr(val[2], buff, 2, '0', true), 2) ;
+  mac.push_back(':') ;
+  mac.append(::RV::toStr(val[3], buff, 2, '0', true), 2) ;
+  mac.push_back(':') ;
+  mac.append(::RV::toStr(val[4], buff, 2, '0', true), 2) ;
+  mac.push_back(':') ;
+  mac.append(::RV::toStr(val[5], buff, 2, '0', true), 2) ;
+  return mac ;
+}
 
 int main()
 {
   lcd.setup() ;
   usart.setup(115200UL) ;
 
-  LcdArea lcdTitle {lcd,   0, 120,  0, 16, &Roboto_Bold7pt7b,      0xffffffUL, 0x4040ffUL} ;
-  LcdArea lcdStatus{lcd, 120,  40,  0, 16, &RobotoMono_Light6pt7b                        } ;
-  LcdArea lcdCmd   {lcd,   0, 160, 16, 48, &RobotoMono_Light6pt7b                        } ;
-  LcdArea lcdClock {lcd,   0, 160, 64, 16, &RobotoMono_Light6pt7b, 0x000000UL, 0xff0000UL} ;
-
-  lcdTitle.put("Hallo ESP-LINK!") ;
+  LcdArea lcdTitle {lcd,   0, 130,  0, 16, &::RV::Longan::Roboto_Bold7pt7b,      0xffffffUL, 0x4040ffUL} ;
+  LcdArea lcdCmd   {lcd,   0, 160, 16, 64} ;
+  LcdArea lcdClock {lcd, 104,  56, 64, 16, &::RV::Longan::RobotoMono_Light6pt7b, 0x000000UL, 0xff0000UL} ;
   
-  TickTimer tMsg{2000, true} ;
-  TickTimer tStatus{1000, true} ;
-  
-  uint32_t cnt = 0 ;
-  enum class Msg
-    {
-     Sync,
-    } msg = Msg::Sync ;
+  lcdTitle.put("ESP-LINK") ;
 
-  while (true)
-  {
-    if (tMsg())
+  { // initial sync
+    TickTimer tSync{1000, (uint32_t)0, true} ;
+    
+    lcdCmd.put("   Syncing") ;
+    bool toggle = true ;
+    while (true)
     {
-      switch (msg)
+      lcd.heartbeat() ;
+    
+      if (tSync()) // repeat every second
       {
-      case Msg::Sync:
         espLink.sync() ;
-        msg = Msg::Sync ;
-        break ;
+        lcdCmd.txtPos(0) ;
+        lcdCmd.put(toggle ? "* " : " *") ;
+        toggle = !toggle ;
+      }
+      if (espLink.poll())
+      {
+        const ::RV::EspLink::Pdu &rxPdu = espLink.rxPdu() ;
+
+        if ((rxPdu._cmd == (uint16_t)::RV::EspLink::Cmd::RespV) &&
+            (rxPdu._ctx == 1) &&
+            (rxPdu._argc == 0))
+          break ;
       }
     }
+  }
 
+  TickTimer tStatus{1000, true} ;
+  
+  uint8_t status0{0xffU} ;
+  std::string sAddr0, sMask0, sGw0, sMac0 ;
+  while (true)
+  {
+    lcd.heartbeat() ;
+    
     if (tStatus())
     {
       {
-        static uint8_t i ;
-        static const char *ch = "|/-\\" ;
         uint8_t status ;
         espLink.wifiStatus(status) ;
-        lcdStatus.txtPos(0) ;
-        lcdStatus.put(ch[i++]) ;
-        lcdStatus.put(' ') ;
-        lcdStatus.put(status) ;
-        if (!ch[i])
-          i = 0 ;
-      }
-      {
-        uint32_t time ;
-        espLink.unixTime(time) ;
-        time %= 24*60*60 ;
-        uint32_t h = time / (60*60) ;
-        time %= 60*60 ;
-        uint32_t m = time / 60 ;
-        time %= 60 ;
-        uint32_t s = time / 1 ;
-        lcdClock.txtPos(0) ;
-        lcdClock.put(' ') ;
-        lcdClock.put(h, 2, '0') ;
-        lcdClock.put(':') ;
-        lcdClock.put(m, 2, '0') ;
-        lcdClock.put(':') ;
-        lcdClock.put(s, 2, '0') ;
-        lcdClock.put(' ') ;
-      }
-    }
-    
-    if (espLink.poll())
-    {
-      const EspLink::RecvBuff &rx = espLink.recvBuff() ;
-      
-      lcdCmd.clear() ;
-      lcdCmd.put(++cnt, 4) ;
-      lcdCmd.put(':') ;
-      lcdCmd.put(' ') ;
-      lcdCmd.put(rx._cmd, 2) ;
-      lcdCmd.put(' ') ;
-      lcdCmd.put(rx._ctx, 4, '0', true) ;
-      lcdCmd.put(' ') ;
-      lcdCmd.put(rx._argc, 2) ;
-      for (uint32_t i = 0 ; (i < rx._argc) && (i < 2) ; ++i)
-      {
-        uint32_t  len = rx._param[i]._len ;
-        uint8_t *data = rx._param[i]._data ;
-        
-        lcdCmd.put('\n') ;
-        lcdCmd.put('[') ;
-        lcdCmd.put(i) ;
-        lcdCmd.put(']') ;
-        lcdCmd.put(' ') ;
-        lcdCmd.put(len, 2) ;
-        for (uint32_t j = 0 ; (j < len) && (j < 4) ; ++j)
+        switch ((::RV::EspLink::WifiStatus)status)
         {
-          lcdCmd.put(' ') ;
-          lcdCmd.put(data[j], 2, '0', true) ;
+        default:
+          if (status != status0)
+          {
+            lcdCmd.clear() ;
+            lcdCmd.put("Status: ") ;
+            lcdCmd.put(status) ;
+          }
+          break ;
+        case ::RV::EspLink::WifiStatus::Idle:
+          {
+            lcdCmd.clear() ;
+            lcdCmd.put("Idle") ;
+          }
+          break ;
+        case ::RV::EspLink::WifiStatus::Connecting:
+          if (status != status0)
+          {
+            lcdCmd.clear() ;
+            lcdCmd.put("Connecting...") ;
+          }
+          break ;
+        case ::RV::EspLink::WifiStatus::GotIp:
+          {
+            uint8_t addr[4] ;
+            uint8_t mask[4] ;
+            uint8_t gw  [4] ;
+            uint8_t mac [6] ;
+
+            if (espLink.wifiInfo(addr, mask, gw, mac))
+            {
+              std::string sAddr = toIp (addr) ;
+              std::string sMask = toIp (mask) ;
+              std::string sGw   = toIp (gw  ) ;
+              std::string sMac  = toMac(mac ) ;
+              
+              if ((status != status0) ||
+                  (sAddr  != sAddr0 ) ||
+                  (sMask  != sMask0 ) ||
+                  (sGw    != sGw0   ) ||
+                  (sMac   != sMac0  ))
+              {
+                sAddr0 = sAddr ;
+                sMask0 = sMask ;
+                sGw0   = sGw   ;
+                sMac0  = sMac  ;
+                
+                lcdCmd.clear() ;
+                lcdCmd.txtPos(0,  0) ; lcdCmd.put("Addr:") ;
+                lcdCmd.txtPos(0, 13) ; lcdCmd.put(sAddr.c_str()) ;
+                lcdCmd.txtPos(1,  0) ; lcdCmd.put("Mask:") ;
+                lcdCmd.txtPos(1, 13) ; lcdCmd.put(sMask.c_str()) ;
+                lcdCmd.txtPos(2,  0) ; lcdCmd.put("Gw:") ;
+                lcdCmd.txtPos(2, 13) ; lcdCmd.put(sGw  .c_str()) ;
+                lcdCmd.txtPos(3,  0) ; lcdCmd.put("Mac:") ;
+                lcdCmd.txtPos(3, 13) ; lcdCmd.put(sMac .c_str()) ;
+              }
+            }
+            else
+            {
+              if (status != status0)
+              {
+                lcdCmd.clear() ;
+                lcdCmd.put("Got IP") ;
+              }
+            }
+          }
+          break ;
         }
+        status0 = status ;
       }
     }
+
+    espLink.poll() ;
   }
 
 }
