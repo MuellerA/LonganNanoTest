@@ -47,3 +47,5 @@ jobs:
         run: platformio run -d GpioIrq
       - name: LcdFonts
         run: platformio run -d LcdFonts
+      - name: Can
+        run: platformio run -d Can

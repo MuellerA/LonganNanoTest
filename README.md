@@ -15,6 +15,7 @@
   <tr><th>SpiDma</th><td>Evaluate SPI with and without DMA with and without IRQ</td></tr>
   <tr><th>GpioIrq</th><td>Display BOOT0 button status on LED via Irq Handler</td></tr>
   <tr><th>LcdFonts</th><td>Show test string in various fonts on LCD</td></tr>
+  <tr><th>Can</th><td>Connect two Longan Nanos via CAN2 (pins B12,B13)</td></tr>
 </table>
 
 <h1>License</h1>
