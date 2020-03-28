@@ -21,18 +21,21 @@ extern "C"
 #include "GD32VF103/time.h"
 #include "Longan/lcd.h"
 #include "Longan/fonts.h"
+#include "Longan/led.h"
 
 #include "can.h"
 
 using ::RV::GD32VF103::TickTimer ;
 using ::RV::Longan::Lcd ;
 using ::RV::Longan::LcdArea ;
+using ::RV::Longan::RgbLed ;
 
 Lcd &lcd{Lcd::lcd()} ;
 Can &can1{Can::can1()} ;
+RgbLed &led{RgbLed::rgbLed()} ;
 
-static const uint32_t CanIdCount  = 0x542 ;
-static const uint32_t CanIdButton = 0x345 ;
+static const uint32_t CanIdCount  = 0x1d22c405 ; // extended id
+static const uint32_t CanIdButton = 0x345 ; // standard id
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,6 +63,7 @@ void canErr(LcdArea &lcdErr)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
 #if defined BUTTON
 
 #include "GD32VF103/gpio.h"
@@ -70,7 +74,11 @@ int main()
 {
   gpioA8.setup(Gpio::Mode::IN_FL) ;
   lcd.setup() ;
-  can1.setup() ;
+  can1.setup(CanBaud::_1M,
+             {
+              CanFilter{CanFilter::Fifo::Fifo1, // CanIdCount frames as mask
+                        (uint32_t) CanIdCount, (uint32_t) 0x1fffffff, CanFilter::Type::Data}
+             }) ;
 
   LcdArea lcdTitle {lcd,  0, 140,  0, 16, &::RV::Longan::Roboto_Bold7pt7b,      0xffffffUL, 0xaa0000UL} ;
   LcdArea lcdRxLbl {lcd,  0,  25, 20, 20 } ;
@@ -110,7 +118,7 @@ int main()
 
     if (can1.rx(rxId, rxIdExt, rxData, rxSize) &&
         (rxId == CanIdCount) &&
-        (rxIdExt == false))
+        (rxIdExt == true))
     {
       lcdRx.clear() ;
       lcdRx.put(*(uint32_t*)rxData) ;
@@ -126,7 +134,13 @@ int main()
 {
   uint32_t count = 0 ;
   lcd.setup() ;
-  can1.setup() ;
+  led.setup() ;
+  can1.setup(CanBaud::_1M,
+             {
+              CanFilter{CanFilter::Fifo::Fifo1, // CanIdButton frames as mask
+                        (uint16_t) CanIdButton, (uint16_t) 0x3ff, CanFilter::Type::Data,
+                        (uint16_t) CanIdButton, (uint16_t) 0x3ff, CanFilter::Type::Data}
+             }) ;
 
   LcdArea lcdTitle {lcd,  0, 140,  0, 16, &::RV::Longan::Roboto_Bold7pt7b,      0xffffffUL, 0x00aa00UL} ;
   LcdArea lcdRxLbl {lcd,  0,  25, 20, 20 } ;
@@ -135,7 +149,8 @@ int main()
   LcdArea lcdTx    {lcd, 30, 160, 40, 20 } ;
   LcdArea lcdErrLbl{lcd,  0,  25, 60, 20 } ;
   LcdArea lcdErr   {lcd, 30, 160, 60, 20 } ;
-  
+
+  led.red() ;
   lcdTitle.put("  CAN COUNTER  ") ;
 
   lcdRxLbl.put("Rx:") ;
@@ -153,7 +168,7 @@ int main()
     if (tTx())
     {
       count += 1 ;
-      can1.tx(CanIdCount, false, (uint8_t*)&count, 4) ;
+      can1.tx(CanIdCount, true, (uint8_t*)&count, 4) ;
 
       lcdTx.clear() ;
       lcdTx.put(count) ;
@@ -168,10 +183,12 @@ int main()
         (rxId == CanIdButton) &&
         (rxIdExt == false))
     {
-      static uint32_t cnt = 0 ;
-      
       lcdRx.clear() ;
       lcdRx.put(rxData[0]) ;
+      if (rxData[0])
+        led.green() ;
+      else
+        led.blue() ;
     }
   }
 }

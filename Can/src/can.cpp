@@ -10,6 +10,139 @@ extern "C"
 #include "GD32VF103/time.h"
 #include "can.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
+CanFilter::CanFilter(Fifo fifo, uint32_t id1, Type type1, uint32_t id2, Type type2)
+  : _fifo{fifo}, _mask{false}, _format{CanFilter::Format::Extended}, _id1{id1}, _id2{id2}, _type1{type1}, _type2{type2}
+{
+}
+
+CanFilter::CanFilter(Fifo fifo, uint32_t id, uint32_t mask, CanFilter::Type type)
+  : _fifo{fifo}, _mask{true}, _format{CanFilter::Format::Extended}, _id1{id}, _id2{mask}, _type1{type}
+{
+}
+
+CanFilter::CanFilter(Fifo fifo, uint16_t id1, Type type1, uint16_t id2, Type type2, uint16_t id3, Type type3, uint16_t id4, Type type4)
+  : _fifo{fifo}, _mask{false}, _format{CanFilter::Format::Standard}, _id1{id1}, _id2{id2}, _id3{id3}, _id4{id4}, _type1{type1}, _type2{type2}, _type3{type3}, _type4{type4}
+{
+}
+
+CanFilter::CanFilter(Fifo fifo, uint16_t id1, uint16_t mask1, CanFilter::Type type1, uint16_t id2, uint16_t mask2, CanFilter::Type type2)
+  : _fifo{fifo}, _mask{true}, _format{CanFilter::Format::Standard}, _id1{id1}, _id2{mask1}, _id3{id2}, _id4{mask2}, _type1{type1}, _type3{type2}
+{
+}
+
+uint32_t frameType(bool mask, CanFilter::Type type)
+{
+  if (mask)
+  {
+    switch (type)
+    {
+    case CanFilter::Type::Data  : return 1 ;
+    case CanFilter::Type::Remote: return 1 ;
+    case CanFilter::Type::Any   : return 0 ;
+    }
+  }
+  else
+  {
+    switch (type)
+    {
+    case CanFilter::Type::Data  : return 0 ;
+    case CanFilter::Type::Remote: return 1 ;
+    case CanFilter::Type::Any   : return 0 ; // invalid: any && !mask
+    }
+  }
+
+  return 0 ;
+}
+
+uint32_t CanFilter::fXData0() const
+{
+  uint32_t fData{0} ;
+  const uint32_t stdIdMask{0x7ff} ;
+
+  switch (_format)
+  {
+  case CanFilter::Format::Extended:
+    fData |= _id1 << 3 ;
+    fData |= 1 << 2 ; // FF extended
+    fData |= frameType(false, _type1) << 1 ;
+    break ;
+  case CanFilter::Format::Standard:
+    // id1
+    fData |= (_id1 & stdIdMask) << (5 + 0) ;
+    fData |= 0 << (3 + 0) ; // FF standard
+    fData |= frameType(false, _type1) << (4 + 0) ;
+    // id2
+    fData |= (_id2 & stdIdMask) << (5 + 16) ;
+    if (_mask)
+    {
+      fData |= 1 << (3 + 16) ; // FF standard
+      fData |= frameType(true, _type1) << (4 + 16) ;
+    }
+    else
+    {
+      fData |= 0 << (3 + 16) ; // FF standard
+      fData |= frameType(false, _type2) << (4 + 16) ;
+    }
+    break ;
+  }
+
+  return fData ;
+}
+
+uint32_t CanFilter::fXData1() const
+{
+  uint32_t fData{0} ;
+  const uint32_t stdIdMask{0x7ff} ;
+
+  switch (_format)
+  {
+  case CanFilter::Format::Extended:
+    fData |= _id2 << 3 ;
+    fData |= 1 << 2 ; // FF extended
+    fData |= frameType(_mask, _mask ? _type1 : _type2) ;
+    break ;
+  case CanFilter::Format::Standard:
+    // id3
+    fData |= (_id3 & stdIdMask) << (5 + 0) ;
+    fData |= 0 << (3 + 0) ; // FF standard
+    fData |= frameType(false, _type3) << (4 + 0) ;
+    // id4
+    fData |= (_id4 & stdIdMask) << (5 + 16) ;
+    if (_mask)
+    {
+      fData |= 1 << (3 + 16) ; // FF standard
+      fData |= frameType(true, _type3) << (4 + 16) ;
+    }
+    else
+    {
+      fData |= 0 << (3 + 16) ; // FF standard
+      fData |= frameType(false, _type4) << (4 + 16) ;
+    }
+    break ;
+  }
+
+  return fData ;
+}
+
+bool CanFilter::mask() const
+{
+  return _mask ;
+}
+
+bool CanFilter::extended() const
+{
+  return _format == CanFilter::Format::Extended ;
+}
+
+bool CanFilter::fifo1() const
+{
+  return _fifo == CanFilter::Fifo::Fifo1 ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 Can::Can(uint32_t can, rcu_periph_enum rcu)
   : _can{can}, _rcu{rcu}
 {
@@ -27,7 +160,7 @@ Can& Can::can0()
   return *can ;
 }
 
-void Can::setup(uint8_t remap0)
+void Can::setup(CanBaud baud, const std::vector<CanFilter> /*max 14*/ &rxFilter, uint8_t remap0)
 {
   rcu_periph_enum rcuGpio ;
   uint32_t gpio ;
@@ -37,10 +170,12 @@ void Can::setup(uint8_t remap0)
 
   switch (_can)
   {
+  default:
   case CAN0:
     {
       switch (remap0)
       {
+      default:
       case 0: rcuGpio = RCU_GPIOA ; gpio = GPIOA ; pinRx = GPIO_PIN_11 ; pinTx = GPIO_PIN_12 ; remap = 0                       ; break ;
       case 1: rcuGpio = RCU_GPIOB ; gpio = GPIOB ; pinRx = GPIO_PIN_8  ; pinTx = GPIO_PIN_9  ; remap = GPIO_CAN0_PARTIAL_REMAP ; break ;
       case 2: rcuGpio = RCU_GPIOD ; gpio = GPIOD ; pinRx = GPIO_PIN_0  ; pinTx = GPIO_PIN_1  ; remap = GPIO_CAN0_FULL_REMAP    ; break ;
@@ -52,13 +187,14 @@ void Can::setup(uint8_t remap0)
     {
       switch (remap0)
       {
+      default:
       case 0: rcuGpio = RCU_GPIOB ; gpio = GPIOB ; pinRx = GPIO_PIN_12 ; pinTx = GPIO_PIN_13 ; remap = 0                       ; break ;
       case 1: rcuGpio = RCU_GPIOB ; gpio = GPIOB ; pinRx = GPIO_PIN_5  ; pinTx = GPIO_PIN_6  ; remap = GPIO_CAN1_REMAP         ; break ;
       }
     }
     break ;
   }
-  
+
   rcu_periph_clock_enable(_rcu) ;
 
   rcu_periph_clock_enable(rcuGpio) ;
@@ -68,8 +204,20 @@ void Can::setup(uint8_t remap0)
 
   if (remap)
     gpio_pin_remap_config(remap, ENABLE) ;
-  
+
   can_deinit(_can) ;
+
+  uint32_t prescaler = 48 ;
+  switch (baud)
+  {
+  case CanBaud::_20k : prescaler = 300 ; break ;
+  case CanBaud::_50k : prescaler = 120 ; break ;
+  case CanBaud::_100k: prescaler =  60 ; break ;
+  case CanBaud::_125k: prescaler =  48 ; break ;
+  case CanBaud::_250k: prescaler =  24 ; break ;
+  case CanBaud::_500k: prescaler =  12 ; break ;
+  case CanBaud::_1M  : prescaler =   6 ; break ;
+  }
 
   // initialize CAN
   can_parameter_struct can_parameter ;
@@ -85,35 +233,61 @@ void Can::setup(uint8_t remap0)
   can_parameter.resync_jump_width     = CAN_BT_SJW_1TQ ;
   can_parameter.time_segment_1        = CAN_BT_BS1_5TQ ;
   can_parameter.time_segment_2        = CAN_BT_BS2_3TQ ;
-  can_parameter.prescaler             = 6 ; // 1Mbps
-  //can_parameter.prescaler           = 48 ; // 125kbps
-  
+  can_parameter.prescaler             = prescaler ;
+
   can_init(_can, &can_parameter) ;
 
   can1_filter_start_bank(14) ;
-  
-  // input filter (accept all, use FIFO1)
-  can_filter_parameter_struct can_filter ;
-  can_struct_para_init(CAN_FILTER_STRUCT, &can_filter) ;
 
-  can_filter.filter_number      = (_can == CAN0) ? 0 : 14 ;
-  can_filter.filter_mode        = CAN_FILTERMODE_MASK ;
-  can_filter.filter_bits        = CAN_FILTERBITS_32BIT ;
-  can_filter.filter_list_high   = 0x0000 ;
-  can_filter.filter_list_low    = 0x0000 ;
-  can_filter.filter_mask_high   = 0x0000 ;
-  can_filter.filter_mask_low    = 0x0000 ;
-  can_filter.filter_fifo_number = CAN_FIFO1 ;
-  can_filter.filter_enable      = ENABLE ;
+  uint32_t filterNumber{(_can == CAN0) ? 0U : 14U} ;
+  uint32_t filterNumberEnd{filterNumber + 14U} ;
 
-  can_filter_init(&can_filter) ;
+  uint8_t  *can0   {(uint8_t*)0x40006400} ;
+  uint32_t *fctl   {(uint32_t*)(can0 + 0x200)} ;
+  uint32_t *fmcfg  {(uint32_t*)(can0 + 0x204)} ;
+  uint32_t *fscfg  {(uint32_t*)(can0 + 0x20c)} ;
+  uint32_t *fafifo {(uint32_t*)(can0 + 0x214)} ;  
+  uint32_t *fw     {(uint32_t*)(can0 + 0x21c)} ;
+
+  *fctl |= 0x01UL ;
+  for (const CanFilter &filter : rxFilter)
+  {
+    if (filterNumber == filterNumberEnd)
+      break ;
+
+    uint32_t filterMask = 1 << filterNumber++ ;
+      
+    uint32_t *fxdata0{(uint32_t*)(can0 + 0x240 + 8*14 + 4*0)} ;
+    uint32_t *fxdata1{(uint32_t*)(can0 + 0x240 + 8*14 + 4*1)} ;
+
+    if (filter.mask())
+      *fmcfg &= ~filterMask ;
+    else
+      *fmcfg |= filterMask ;
+
+    if (filter.extended())
+      *fscfg |= filterMask ;
+    else
+      *fscfg &= ~filterMask ;
+
+    if (filter.fifo1())
+      *fafifo |= filterMask ;
+    else
+      *fafifo &= ~filterMask ;
+
+    *fw |= filterMask ;
+
+    *fxdata0 = filter.fXData0() ;
+    *fxdata1 = filter.fXData1() ;
+  }
+  *fctl &= ~0x01UL ;
 }
 
 bool Can::tx(uint32_t id, bool extId, const uint8_t *data, uint32_t size)
 {
   if (size > 8)
     return false ;
-  
+
   can_trasnmit_message_struct transmit_message ;
 
   can_struct_para_init(CAN_TX_MESSAGE_STRUCT, &transmit_message) ;
@@ -136,7 +310,7 @@ bool Can::tx(uint32_t id, bool extId, const uint8_t *data, uint32_t size)
   uint8_t mailbox = CAN_NOMAILBOX ;
   while (mailbox == CAN_NOMAILBOX)
     mailbox = can_message_transmit(_can, &transmit_message) ;
-  
+
   return true ;
 }
 
@@ -163,8 +337,8 @@ bool Can::rx(uint32_t &id, bool &extId, uint8_t *data, uint32_t &size)
   size = receive_message.rx_dlen ;
   for (uint8_t i = 0 ; i < size ; ++i)
     data[i] = receive_message.rx_data[i] ;
-         
-  return true ; 
+
+  return true ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
