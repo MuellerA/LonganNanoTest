@@ -255,11 +255,11 @@ void Can::setup(CanBaud baud, const std::vector<CanFilter> /*max 14*/ &rxFilter,
     if (filterNumber == filterNumberEnd)
       break ;
 
+    uint32_t *fxdata0{(uint32_t*)(can0 + 0x240 + 8*filterNumber + 4*0)} ;
+    uint32_t *fxdata1{(uint32_t*)(can0 + 0x240 + 8*filterNumber + 4*1)} ;
+
     uint32_t filterMask = 1 << filterNumber++ ;
       
-    uint32_t *fxdata0{(uint32_t*)(can0 + 0x240 + 8*14 + 4*0)} ;
-    uint32_t *fxdata1{(uint32_t*)(can0 + 0x240 + 8*14 + 4*1)} ;
-
     if (filter.mask())
       *fmcfg &= ~filterMask ;
     else
@@ -317,13 +317,18 @@ bool Can::tx(uint32_t id, bool extId, const uint8_t *data, uint32_t size)
 bool Can::rx(uint32_t &id, bool &extId, uint8_t *data, uint32_t &size)
 {
   can_receive_message_struct receive_message ;
+  uint8_t canFifo ;
 
-  if (can_receive_message_length_get(_can, CAN_FIFO1) == 0)
+  if (can_receive_message_length_get(_can, CAN_FIFO0) > 0)
+    canFifo = CAN_FIFO0 ;
+  else if (can_receive_message_length_get(_can, CAN_FIFO1) > 0)
+    canFifo = CAN_FIFO1 ;
+  else
     return false ;
 
   can_struct_para_init(CAN_RX_MESSAGE_STRUCT, &receive_message) ;
 
-  can_message_receive(_can, CAN_FIFO1, &receive_message) ;
+  can_message_receive(_can, canFifo, &receive_message) ;
   if (receive_message.rx_ff == CAN_FF_EXTENDED)
   {
     id = receive_message.rx_efid ;
