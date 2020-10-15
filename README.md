@@ -16,6 +16,7 @@
   <tr><th>GpioIrq</th><td>Display BOOT0 button status on LED via Irq Handler</td></tr>
   <tr><th>LcdFonts</th><td>Show test string in various fonts on LCD</td></tr>
   <tr><th>Can</th><td>Connect two Longan Nanos via CAN2 (pins B12,B13)</td></tr>
+  <tr><th>SdCard</th><td>Read/Write SD card</td></tr>
 </table>
 
 <h1>License</h1>
@@ -94,7 +95,7 @@ Longan Nano Lite needs version >= 1.1.1 of the GD32V platform.
   <tr><td colspan="99">[x] not available as header pin; 5VT (5 Volt Tolerant Input): * yes, - no</td></tr>
 </table>
 
-<h2>Troubles with Longan Nano and GD32V 1.1.1 Platform</h2>
+<h2>Troubles with Longan Nano and GD32V Platform</h2>
 <h3>Compile</h3>
 <ul>
   <li><pre>.../.platformio/packages/framework-gd32vf103-sdk/GD32VF103_standard_peripheral/gd32vf103.h:179:41: error: redeclaration of C++ built-in type 'bool' [-fpermissive]
@@ -103,13 +104,18 @@ Longan Nano Lite needs version >= 1.1.1 of the GD32V platform.
   </li>
   <li><pre>Adding dfu suffix to firmware.bin
 sh: 1: dfu-suffix: not found</pre>
-    <p>dfu-utils get only installed when uploading with dfu. Build with target 'upload' once, then the program will be found.</p>
+    <p>dfu-utils only gets installed when uploading with dfu. Build with target 'upload' once, then the program will be found.</p>
   </li>
 </ul>
 <h3>Upload</h3>
 <ul>
-  <li>DFU on Linux: Longan Nano Lite working fine. Longan Nano only after download & compile of <a href="https://sourceforge.net/p/dfu-util/dfu-util/ci/master/tree/">latest dfu-util</a>.</li>
-  <li>JLink on Linux: Gives error message after upload, but after power cycling the Longan Nano the program is working (reset is not enough).</li>
-  <li>DFU on Windows: didn't get it working. Use <a href="https://longan.sipeed.com/en/get_started/blink.html#usb-dfu-download_1">GigaDevice Dfu Tool</a> instead.</li>
+  <li>DFU on Linux:
+    <ul>
+      <li>GD32V 1.1.1: Longan Nano Lite working fine. Longan Nano only after download & compile of <a href="https://sourceforge.net/p/dfu-util/dfu-util/ci/master/tree/">latest dfu-util</a>.</li>
+      <li>GD32V 1.2.0: Error messages after upload, but seems to work. Sometimes a reset is needed after upload and sometimes not.</li>
+    </ul>
+  </li>
+  <li>JLink on Linux (tried with 1.1.1): Gives error message after upload, but after power cycling the Longan Nano the program is working (reset is not enough).</li>
+  <li>DFU on Windows (tried with 1.1.1): didn't get it working. Use <a href="https://longan.sipeed.com/en/get_started/blink.html#usb-dfu-download_1">GigaDevice Dfu Tool</a> instead.</li>
   <li>JLink on Windows: didn't try yet.</li>
 </ul>
