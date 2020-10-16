@@ -17,14 +17,14 @@ extern void Debug(char c, uint8_t v) ;
 
 
 #include "GD32VF103/time.h"
+#include "GD32VF103/spi.h"
 #include "GD32VF103/gpio.h"
 
 using ::RV::GD32VF103::TickTimer ;
+using ::RV::GD32VF103::Spi ;
 using ::RV::GD32VF103::Gpio ;
 
-Gpio  &gpioDO{Gpio::gpioB14()} ;
-Gpio  &gpioDI{Gpio::gpioB15()} ;
-Gpio  &gpioCK{Gpio::gpioB13()} ;
+Spi   &spi{Spi::spi1()} ; // gpio b13,b14,b15
 Gpio  &gpioCS{Gpio::gpioB12()} ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,57 +61,20 @@ static const uint8_t CMD58  = 58     ;       // READ_OCR
 
 void diskioSetup()
 {
-  gpioDO.setup(Gpio::Mode::IN_FL ) ;
-  gpioDI.setup(Gpio::Mode::OUT_PP) ;
-  gpioCK.setup(Gpio::Mode::OUT_PP) ; gpioCK.low() ;
+  spi.setup(Spi::Psc::_2) ;
   gpioCS.setup(Gpio::Mode::OUT_PP) ; gpioCS.high() ;
-}
-
-static inline void gpioCkToggle()
-{
-  gpioCK.high() ;
-  gpioCK.low() ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void tx(const BYTE* buff, // Data to be sent
-               UINT size)          //Number of bytes to send
+static inline void tx(const BYTE* buff, UINT size)
 {
-  BYTE d;
-
-  for (UINT i = 0 ; i < size ; ++i)
-  {
-    d = *buff++;
-    gpioDI.set(d & 0x80) ; gpioCkToggle() ;
-    gpioDI.set(d & 0x40) ; gpioCkToggle() ;
-    gpioDI.set(d & 0x20) ; gpioCkToggle() ;
-    gpioDI.set(d & 0x10) ; gpioCkToggle() ;
-    gpioDI.set(d & 0x08) ; gpioCkToggle() ;
-    gpioDI.set(d & 0x04) ; gpioCkToggle() ;
-    gpioDI.set(d & 0x02) ; gpioCkToggle() ;
-    gpioDI.set(d & 0x01) ; gpioCkToggle() ;
-  }
+  spi.xch(const_cast<uint8_t*>(buff), size, 1) ;
 }
 
-static void rx(BYTE *buff,  // Pointer to read buffer
-               UINT size)     // Number of bytes to receive
+static inline void rx(BYTE *buff, UINT size)
 {
-  gpioDI.high(); // Send 0xFF
-
-  for (UINT i = 0 ; i < size ; ++i)
-  {
-    BYTE r = 0 ;
-    if (gpioDO.get()) { r |= 0x80 ; } gpioCkToggle() ;
-    if (gpioDO.get()) { r |= 0x40 ; } gpioCkToggle() ;
-    if (gpioDO.get()) { r |= 0x20 ; } gpioCkToggle() ;
-    if (gpioDO.get()) { r |= 0x10 ; } gpioCkToggle() ;
-    if (gpioDO.get()) { r |= 0x08 ; } gpioCkToggle() ;
-    if (gpioDO.get()) { r |= 0x04 ; } gpioCkToggle() ;
-    if (gpioDO.get()) { r |= 0x02 ; } gpioCkToggle() ;
-    if (gpioDO.get()) { r |= 0x01 ; } gpioCkToggle() ;
-    *buff++ = r;
-  }
+  spi.xch(buff, size, 2) ;
 }
 
 static bool wait_ready(UINT timeoutMs = 500)

@@ -59,12 +59,14 @@ int main()
   f_close(&f) ;
 
   {
-    std::vector<uint8_t> data(2048, 'a') ;
+    size_t size = 3000 ;
+    
+    std::vector<uint8_t> data(size, 'a') ;
     f_open(&f, "/hallo.data", FA_CREATE_ALWAYS | FA_WRITE) ;
     f_write(&f, data.data(), data.size(), &len) ;
     f_close(&f) ;
 
-    std::vector<uint8_t> data2(2048, 'b') ;
+    std::vector<uint8_t> data2(size, 'b') ;
     f_open(&f, "/hallo.data", FA_READ) ;
     f_read(&f, data2.data(), data2.size(), &len) ;
     f_close(&f) ;
