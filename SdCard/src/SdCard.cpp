@@ -44,6 +44,8 @@ int main()
   res = f_read(&f, buff, sizeof(buff), &len); lcd.put((uint8_t)res) ; lcd.put(' ') ;
   res = f_close(&f) ;                         lcd.put((uint8_t)res) ; lcd.put(' ') ;
 
+  lcd.txtPos(2) ;
+  lcd.put("hallo.txt: ") ;
   lcd.put((char*)buff, len) ;  
 
   if (f_open(&f, "/hallo.neu", FA_READ) == FR_OK)
@@ -51,6 +53,8 @@ int main()
     f_read(&f, buff, sizeof(buff), &len);
     f_close(&f) ;
 
+    lcd.txtPos(3) ;
+    lcd.put("hallo.neu: ") ;
     lcd.put((char*)buff, len) ;  
   }
 
@@ -71,7 +75,9 @@ int main()
     f_read(&f, data2.data(), data2.size(), &len) ;
     f_close(&f) ;
 
-    lcd.put((data == data2) ? '=' : '!') ;
+    lcd.txtPos(4) ;
+    lcd.put("hallo.data test: ") ;
+    lcd.put((data == data2) ? "pass" : "fail") ;
   }
   
   while (true) ;

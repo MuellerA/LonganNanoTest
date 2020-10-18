@@ -49,3 +49,5 @@ jobs:
         run: platformio run -d LcdFonts
       - name: Can
         run: platformio run -d Can
+      - name: SdCard
+        run: platformio run -d SdCard
