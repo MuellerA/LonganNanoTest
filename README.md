@@ -19,6 +19,10 @@
   <tr><th><a href="SdCard">SdCard</a></th><td>Read/Write SD card</td></tr>
 </table>
 
+<h1>Case</h1>
+
+<p>3D Printer files for a case are in the folder <a href="_CaseStl">_CaseStl</a>.</p>
+
 <h1>License</h1>
 
 <p>My code uses the <a href="LICENSE">MIT License</a>. The repository contains code from other sources, for their license conditions check the files in the lib/ folders.</p>
