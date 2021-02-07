@@ -170,7 +170,7 @@ module bottom()
       cube([80, 40, 10], center=true) ;
 
       // sdcard
-#      translate([-length/2 + 6/2 - 2*wallWidth, 0, (height+wallWidth)/2-wallWidth])
+      translate([-length/2 + 6/2 - 2*wallWidth, 0, (height+wallWidth)/2-wallWidth])
         cube([6, 12, height+2*wallWidth], center=true) ;
 
       // ser/jtag

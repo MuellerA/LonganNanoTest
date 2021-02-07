@@ -17,6 +17,7 @@
   <tr><th>LcdFonts</th><td>Show test string in various fonts on LCD</td></tr>
   <tr><th>Can</th><td>Connect two Longan Nanos via CAN2 (pins B12,B13)</td></tr>
   <tr><th><a href="SdCard">SdCard</a></th><td>Read/Write SD card</td></tr>
+  <tr><th><a href="Flash">Flash</a></th><td>Using 64MBit SPI Flash memory</td></tr>
 </table>
 
 <h1>Case</h1>
@@ -43,11 +44,11 @@
 <h2>Documentation, Examples, etc</h2>
 <table>
   <tr><td>Sipeed Longan Nano <a href="http://dl.sipeed.com/LONGAN/Nano/">Specs Tools</a> <a href="https://longan.sipeed.com/en/">Wiki</a> <a href="https://en.bbs.sipeed.com/c/14-category/">BBS</a></td></tr>
-  <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/222/path_type/1">GD32VF103 User Manual 1.2</a></td></tr>
-  <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/221/path_type/1">GD32VF103 Datasheet 1.1</a></td></tr>
-  <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/228/path_type/1">GD32VF103 Firmware Library User Guide 1.0</a></td></tr>
-  <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/227/path_type/1">GD32VF103 Demo Suites 1.0.3 (.rar)</a></td></tr>
-  <tr><td><a href="http://gd32mcu.21ic.com/en/down/document_id/223/path_type/1">GD32VF103 Firmware Library 1.0.2 (.rar)</a></td></tr>
+  <tr><td><a href="http://www.gd32mcu.com/download/down/document_id/222/path_type/1">GD32VF103 User Manual 1.2</a></td></tr>
+  <tr><td><a href="http://www.gd32mcu.com/download/down/document_id/221/path_type/1">GD32VF103 Datasheet 1.3</a></td></tr>
+  <tr><td><a href="http://www.gd32mcu.com/download/down/document_id/228/path_type/1">GD32VF103 Firmware Library User Guide 1.0</a></td></tr>
+  <tr><td><a href="http://www.gd32mcu.com/download/down/document_id/227/path_type/1">GD32VF103 Demo Suites 1.1.0 (.rar)</a></td></tr>
+  <tr><td><a href="http://www.gd32mcu.com/download/down/document_id/266/path_type/1">GD32VF103 Firmware Library 1.1.1 (.rar)</a></td></tr>
   <tr><td><a href="https://content.riscv.org/wp-content/uploads/2019/06/riscv-spec.pdf">The RISC-V Instruction Set Manual Volume I: Unprivileged ISA</a></td></tr>
 </table>
 
