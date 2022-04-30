@@ -4,8 +4,14 @@
 
 #pragma once
 
+#include <stdint.h>
+
 class LcdCmdData ;
 
+
+// LCD library for the Sitronix ST7735S controller
+// cf. https://dl.sipeed.com/fileList/LONGAN/Nano/HDK/driver%20chip%20ST7735S_V1.5_20150303.pdf
+//     https://www.mipi.org/specifications/display-command-set
 class Lcd
 {
 public:

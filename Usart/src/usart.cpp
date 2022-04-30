@@ -4,7 +4,8 @@
 
 extern "C"
 {
-#include "gd32vf103.h"
+#include <gd32vf103_gpio.h>
+#include <gd32vf103_usart.h>
 }
 
 #include "usart.h"
