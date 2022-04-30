@@ -5,8 +5,7 @@
 #pragma once
 
 #include <stdint.h>
-
-class LcdCmdData ;
+#include <initializer_list>
 
 
 // LCD library for the Sitronix ST7735S controller
@@ -35,7 +34,7 @@ private:
 
   void cmd(uint8_t cmd) ;
   void data(uint8_t data) ;
-  void cmd(const LcdCmdData &cmdData) ;
+  void cmd(uint8_t cmd, std::initializer_list<uint8_t> data) ;
 
   Spi     &_spi ;
   rcu_periph_enum _rcuGpio ;
