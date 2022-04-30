@@ -150,20 +150,21 @@ void Lcd::putChar(char ch)
   }
   else
   {
-    if (ch == 0x0a) // LF
-    {
-      _txtPosX = _txtAreaXmin ;
-      _txtPosY += _fontHeight ;
-      if ((_txtPosY + _fontHeight) > _txtAreaYmax+1)
-        _txtPosY  = _txtAreaYmin ;
-      return ;
-    }
-    if (ch == 0x0c) // FF
-    {
-      _txtPosX = _txtAreaXmin ;
-      _txtPosY = _txtAreaYmin ;
-      fill(_txtAreaXmin, _txtAreaXmax, _txtAreaYmin, _txtAreaYmax, _txtBg) ;
-      return ;
+    switch  (ch) {
+        case '\n': // 0x0a // LF
+          _txtPosX = _txtAreaXmin ;
+          _txtPosY += _fontHeight ;
+          if (_txtPosY + _fontHeight > _txtAreaYmax+1)
+            _txtPosY  = _txtAreaYmin ;
+          break;
+        case '\f': // 0x0c // FF
+          _txtPosX = _txtAreaXmin ;
+          _txtPosY = _txtAreaYmin ;
+          fill(_txtAreaXmin, _txtAreaXmax, _txtAreaYmin, _txtAreaYmax, _txtBg) ;
+          break;
+        case '\r': // 0x0d // CR
+          _txtPosX = _txtAreaXmin ;
+          break;
     }
   }
 }
