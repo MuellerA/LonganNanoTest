@@ -4,7 +4,9 @@
 
 extern "C"
 {
-#include "gd32vf103.h"
+#include <gd32vf103_rcu.h>
+#include <gd32vf103_gpio.h>
+#include <gd32vf103_spi.h>
 }
 
 #include "spi.h"
