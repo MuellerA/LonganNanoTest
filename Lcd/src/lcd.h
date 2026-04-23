@@ -4,8 +4,13 @@
 
 #pragma once
 
-class LcdCmdData ;
+#include <stdint.h>
+#include <initializer_list>
 
+
+// LCD library for the Sitronix ST7735S controller
+// cf. https://dl.sipeed.com/fileList/LONGAN/Nano/HDK/driver%20chip%20ST7735S_V1.5_20150303.pdf
+//     https://www.mipi.org/specifications/display-command-set
 class Lcd
 {
 public:
@@ -29,7 +34,7 @@ private:
 
   void cmd(uint8_t cmd) ;
   void data(uint8_t data) ;
-  void cmd(const LcdCmdData &cmdData) ;
+  void cmd(uint8_t cmd, std::initializer_list<uint8_t> data) ;
 
   Spi     &_spi ;
   rcu_periph_enum _rcuGpio ;

@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <gd32vf103_rcu.h>
+
 class Usart
 {
 protected:
